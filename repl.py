@@ -6,8 +6,8 @@ class Repl:
     def __init__(self, tm):
         self._tm = tm
         self._CMDS = {
-            'start' : (lambda i: self._tm.start(self.get_arg(6, i)), 'start the PROGNAME program'),
-            'stop' : (lambda i: self._tm.start(self.get_arg(5, i)), 'stop the PROGNAME program'),
+            'start' : (lambda i: self._tm.start(self._get_arg(6, i)), 'start the PROGNAME program'),
+            'stop' : (lambda i: self._tm.start(self._get_arg(5, i)), 'stop the PROGNAME program'),
             'restart' : (self._restart, 'restart the PROGNAME program'),
             'reread' : (lambda i: self._tm.update_conf(), 'update configuration file'),
             'status' : (lambda i: self._tm.status(), 'display status for each program'),
@@ -20,10 +20,10 @@ class Repl:
 
     def run(self):
         while True:
-            i = input('Taskmaster >')
+            i = input('Taskmaster > ')
             if self._tm.has_conf_changed():
                 self._tm.update_conf()
-            self._CMDS.get(i, (self._unknown,))[0](i)
+            self._CMDS.get(i.split()[0], (self._unknown,))[0](i)
 
     def _restart(self, inp):
         arg = self.get_arg(7, inp)
@@ -42,7 +42,8 @@ class Repl:
         opts = [o for o in self._CMDS if o.startswith(text)]
         return opts[state] if state < len(opts) else None
 
-    def get_arg(self, index, inp):
-        if len(inp.split()) < 2:
-            print('[Taskmaster]', inp[:index-1], 'expects a PROGNAME argument')
-        return inp[index:]
+    def _get_arg(self, index, inp):
+        if len(inp.split()) > 2:
+            return inp[index:]
+        print('[Taskmaster]', inp, 'expects a PROGNAME argument')
+

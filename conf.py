@@ -31,8 +31,8 @@ class Conf:
         self._file_hash = self._hash()
         with open(self.path) as file:
             new = yaml.load(file)
-            ## todo check data integrity
-            diff = self.conf_diff(new.get('programs', {}))
+            new = self._check_data(new)
+            diff = self._conf_diff(new.get('programs', {}))
         self._dict.update(new)
         return diff
 
@@ -50,7 +50,7 @@ class Conf:
     def has_changed(self):
         return self._hash() != self._file_hash
 
-    def conf_diff(self, new):
+    def _conf_diff(self, new):
         old = self._dict.get('programs', {})
         r = {'start': [], 'stop': []}
         key_changes = set(old) ^ set(new)
@@ -66,11 +66,17 @@ class Conf:
                         break
         return r
 
+    ## TODO check everything *needed* option (such as 'cmd')
+    def _check_data(self, new):
+        if not 'programs' in new:
+            return self._dict
+        return new
+
     def __repr__(self):
-        return repr(self._dict)
+        return repr(self._dict['programs'])
 
     def __iter__(self):
-        return iter(self._dict)
+        return iter(self._dict['programs'])
 
     def __getitem__(self, item):
-        return self._dict[item]
+        return self._dict['programs'][item]

@@ -1,10 +1,9 @@
 programs:
   test:
-    autostart: False
     exitcodes:
       - 0
 
   test3 zezez:
     cmd: "!!"
-    autostart: False
-    test: sss
+    autostart: True
+    test: ss

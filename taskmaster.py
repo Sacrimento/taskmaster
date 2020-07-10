@@ -15,23 +15,28 @@ class Taskmaster:
         self.update_conf(False)
 
     def update_tasks(self, changes):
-        print('changes: ', changes)
+        for todo in ('start', 'stop'):
+            for task in changes[todo]:
+                if todo != 'start' or self._conf[task].get('autostart', True):
+                    getattr(self, todo)(task)
 
     def update_conf(self, p=True):
-        self.update_tasks(self._conf.populate())
         if p:
             print('[Taskmaster] Config file updated !', self._conf)
+        self.update_tasks(self._conf.populate())
 
     def has_conf_changed(self):
         return self._conf.has_changed()
 
     def start(self, name):
-        print(name)
-        pass
+        if not name:
+            return
+        print(name, 'started')
 
     def stop(self, name):
-        print(name)
-        pass
+        if not name:
+            return
+        print(name, 'stopped')
 
     def status(self):
         pass
