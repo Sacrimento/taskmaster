@@ -29,16 +29,23 @@ class Taskmaster:
         return self._conf.has_changed()
 
     def start(self, name):
-        if not name:
+        if self._handle_bad_name(name):
             return
         print(name, 'started')
 
     def stop(self, name):
-        if not name:
+        if self._handle_bad_name(name):
             return
         print(name, 'stopped')
 
     def status(self):
         pass
+
+    def _handle_bad_name(self, name):
+        if not name:
+            return True
+        if name not in self._conf:
+            print('[Taskmaster] "'+ name +'": unknown process name')
+            return True
 
 Repl(Taskmaster(conf)).run()

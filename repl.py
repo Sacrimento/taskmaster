@@ -17,6 +17,7 @@ class Repl:
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self._completer)
         signal.signal(signal.SIGHUP, lambda _, __: self.tm.update_conf())
+        signal.signal(signal.SIGINT, lambda _, __: (print(), exit(0))) # Maybe a bad idea
 
     def run(self):
         while True:
@@ -43,7 +44,7 @@ class Repl:
         return opts[state] if state < len(opts) else None
 
     def _get_arg(self, index, inp):
-        if len(inp.split()) > 2:
+        if len(inp.split()) > 1:
             return inp[index:]
         print('[Taskmaster]', inp, 'expects a PROGNAME argument')
 
