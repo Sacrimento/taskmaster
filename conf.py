@@ -25,7 +25,6 @@ class Conf:
 
     def __init__(self, path):
         self.path = path
-        self.populate()
 
     @catch_conf_except
     def populate(self):

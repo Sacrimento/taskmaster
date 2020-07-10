@@ -7,4 +7,4 @@ programs:
   test3:
     cmd: "!!"
     autostart: False
-    test: s
+    test: sss
