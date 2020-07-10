@@ -8,3 +8,4 @@ programs:
   test2:
     cmd: "!!"
     autostart: False
+    test: s

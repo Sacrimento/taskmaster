@@ -5,9 +5,6 @@ import sys
 from conf import Conf
 from repl import Repl
 
-def load_conf():
-    conf = Conf(sys.argv[1])
-    print(conf['programs'])
+conf = Conf('conf.yml')
 
-load_conf()
-Repl().run()
+Repl(conf).run()
