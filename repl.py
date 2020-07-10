@@ -3,12 +3,14 @@ import signal
 
 class Repl:
 
-    _PROMPT = 'Taskmaster > '
-
     def __init__(self, tm):
         self._tm = tm
         self._CMDS = {
-            'test' : (self._printf, 'tests'),
+            'start' : (lambda i: self._tm.start(self.get_arg(6, i)), 'start the PROGNAME program'),
+            'stop' : (lambda i: self._tm.start(self.get_arg(5, i)), 'stop the PROGNAME program'),
+            'restart' : (self._restart, 'restart the PROGNAME program'),
+            'reread' : (lambda i: self._tm.update_conf(), 'update configuration file'),
+            'status' : (lambda i: self._tm.status(), 'display status for each program'),
             'help' : (self._help, 'display help'),
             'exit' : (lambda i: exit(0), 'exit taskmaster'),
         }
@@ -18,13 +20,16 @@ class Repl:
 
     def run(self):
         while True:
-            i = input(self._PROMPT)
+            i = input('Taskmaster >')
             if self._tm.has_conf_changed():
                 self._tm.update_conf()
             self._CMDS.get(i, (self._unknown,))[0](i)
 
-    def _printf(self, inp):
-        print('helo !')
+    def _restart(self, inp):
+        arg = self.get_arg(7, inp)
+
+        self._tm.stop(arg)
+        self._tm.start(arg)
 
     def _unknown(self, inp):
         print('[Taskmaster]', inp, ': Unknown command')
@@ -36,3 +41,8 @@ class Repl:
     def _completer(self, text, state):
         opts = [o for o in self._CMDS if o.startswith(text)]
         return opts[state] if state < len(opts) else None
+
+    def get_arg(self, index, inp):
+        if len(inp.split()) < 2:
+            print('[Taskmaster]', inp[:index-1], 'expects a PROGNAME argument')
+        return inp[index:]

@@ -25,4 +25,15 @@ class Taskmaster:
     def has_conf_changed(self):
         return self._conf.has_changed()
 
+    def start(self, name):
+        print(name)
+        pass
+
+    def stop(self, name):
+        print(name)
+        pass
+
+    def status(self):
+        pass
+
 Repl(Taskmaster(conf)).run()
