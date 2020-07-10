@@ -1,0 +1,10 @@
+programs:
+  test:
+    autostart: True
+    exitcodes:
+      - 0
+      - 1
+  
+  test2:
+    cmd: "!!"
+    autostart: False
