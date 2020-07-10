@@ -15,7 +15,6 @@ class Repl:
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self._completer)
         signal.signal(signal.SIGHUP, lambda _, __: self.update_conf())
-        signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     def run(self):
         while True:
@@ -25,7 +24,7 @@ class Repl:
             self._CMDS.get(i, (self._unknown,))[0](i)
 
     def update_conf(self):
-        self.conf.populate()
+        self._conf.populate()
         print('[Taskmaster] Config file updated !', self._conf)
 
     def _printf(self, inp):

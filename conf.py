@@ -31,7 +31,11 @@ class Conf:
     def populate(self):
         self._file_hash = self._hash()
         with open(self.path) as file:
-            self._dict.update(yaml.load(file))
+            new = yaml.load(file)
+            ## todo check data integrity
+            diff = self.conf_diff(new.get('programs', {}))
+        self._dict.update(new)
+        return diff
 
     def _hash(self):
         h = hashlib.md5()
@@ -46,6 +50,22 @@ class Conf:
 
     def has_changed(self):
         return self._hash() != self._file_hash
+
+    def conf_diff(self, new):
+        old = self._dict.get('programs', {})
+        r = {'start': [], 'stop': []}
+        key_changes = set(old) ^ set(new)
+        for key in key_changes:
+            r['start' if key in new else 'stop'].append(key)
+        
+        for prog, prog_attr in new.items():
+            if prog not in key_changes:
+                for k, v in prog_attr.items():
+                    if k not in old[prog] or old[prog][k] != v:
+                        r['start'].append(prog)
+                        r['stop'].append(prog)
+                        break
+        return r
 
     def __repr__(self):
         return repr(self._dict)
