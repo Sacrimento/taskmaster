@@ -3,8 +3,9 @@ import signal
 
 class Repl:
 
-    def __init__(self, tm):
+    def __init__(self, tm, auto_reload):
         self._tm = tm
+        self.auto_reload = auto_reload
         self._CMDS = {
             'start' : (lambda i: self._tm.start(self._get_arg(6, i)), 'start the PROGNAME program'),
             'stop' : (lambda i: self._tm.start(self._get_arg(5, i)), 'stop the PROGNAME program'),
@@ -22,7 +23,7 @@ class Repl:
     def run(self):
         while True:
             i = input('Taskmaster > ')
-            if self._tm.has_conf_changed():
+            if self.auto_reload and self._tm.has_conf_changed():
                 self._tm.update_conf()
             self._CMDS.get(i.split()[0], (self._unknown,))[0](i)
 
@@ -45,6 +46,6 @@ class Repl:
 
     def _get_arg(self, index, inp):
         if len(inp.split()) > 1:
-            return inp[index:]
+            return inp[index:].lstrip()
         print('[Taskmaster]', inp, 'expects a PROGNAME argument')
 

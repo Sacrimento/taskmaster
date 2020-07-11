@@ -1,11 +1,3 @@
-#!/usr/bin/python3
-
-import sys
-
-from conf import Conf
-from repl import Repl
-
-conf = Conf('conf.yml')
 
 class Taskmaster:
     _processes = {}
@@ -21,9 +13,12 @@ class Taskmaster:
                     getattr(self, todo)(task)
 
     def update_conf(self, p=True):
+        conf_changes = self._conf.populate()
+        if not conf_changes or (not conf_changes['start'] and not conf_changes['stop']):
+            return
         if p:
             print('[Taskmaster] Config file updated !', self._conf)
-        self.update_tasks(self._conf.populate())
+        self.update_tasks(conf_changes)
 
     def has_conf_changed(self):
         return self._conf.has_changed()
@@ -47,5 +42,3 @@ class Taskmaster:
         if name not in self._conf:
             print('[Taskmaster] "'+ name +'": unknown process name')
             return True
-
-Repl(Taskmaster(conf)).run()

@@ -8,7 +8,7 @@ def catch_conf_except(func):
         except IOError as exc:
             print('[Taskmaster] Fatal: config file error :\n', exc)
             exit(1)
-        except yaml.scanner.ScannerError as exc:
+        except (yaml.scanner.ScannerError, MissingData) as exc:
             print('[Taskmaster] Critical: config file format error :\n', exc)
             if _self._dict:
                 print('[Taskmaster] Info: Last working config file will be used')
@@ -17,6 +17,9 @@ def catch_conf_except(func):
         else:
             return r
     return wrapper
+
+class MissingData(Exception):
+    pass
 
 class Conf:
 
@@ -31,7 +34,7 @@ class Conf:
         self._file_hash = self._hash()
         with open(self.path) as file:
             new = yaml.load(file)
-            new = self._check_data(new)
+            self._check_data(new)
             diff = self._conf_diff(new.get('programs', {}))
         self._dict.update(new)
         return diff
@@ -66,11 +69,13 @@ class Conf:
                         break
         return r
 
-    ## TODO check everything *needed* option (such as 'cmd')
+    ## TODO check every *needed* option (such as 'cmd')
     def _check_data(self, new):
+        errors = []
         if not 'programs' in new:
-            return self._dict
-        return new
+            errors.append('"programs" root key missing')
+        if errors:
+            raise MissingData('\n'.join(errors))
 
     def __repr__(self):
         return repr(self._dict['programs'])
