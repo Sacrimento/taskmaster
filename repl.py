@@ -1,5 +1,6 @@
 import readline
 import signal
+import difflib
 
 class Repl:
 
@@ -34,7 +35,9 @@ class Repl:
         self._tm.start(arg)
 
     def _unknown(self, inp):
-        print('[Taskmaster]', inp, ': Unknown command')
+        closest = difflib.get_close_matches(inp, list(self._CMDS.keys()), 1, 0.5)
+        print('[Taskmaster]', inp, ': Unknown command', end='')
+        print(f'. Did you mean "{closest[0]}" ?\n' if closest else '\n', end='')
 
     def _help(self, inp):
         for k, v in self._CMDS.items():
