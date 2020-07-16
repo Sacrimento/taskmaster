@@ -33,7 +33,7 @@ class Conf:
     def populate(self):
         self._file_hash = self._hash()
         with open(self.path) as file:
-            new = yaml.load(file)
+            new = yaml.safe_load(file)
             self._check_data(new)
             diff = self._conf_diff(new.get('programs', {}))
         self._dict.update(new)

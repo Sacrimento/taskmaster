@@ -1,3 +1,5 @@
+import subprocess
+import sys
 
 class Taskmaster:
     _processes = {}
@@ -24,13 +26,23 @@ class Taskmaster:
         return self._conf.has_changed()
 
     def start(self, name):
+        print('starting:', name) 
         if self._handle_bad_name(name):
             return
-        print(name, 'started')
+        current_state = self._conf[name]
+        with open(current_state['stdout'], 'w') if 'stdout' in current_state else sys.stdout as stdout, open(current_state['stderr'], 'w') if 'stderr' in current_state else sys.stderr as stderr:
+            process = subprocess.Popen(current_state['cmd'].split(' '),
+                    stdout=stdout,
+                    stderr=stderr)
+            print(name, 'started')
+        self._processes[name] = process
 
     def stop(self, name):
+        print('stoping:', name) 
         if self._handle_bad_name(name):
             return
+        stop_signal = self.conf['stopsignal'] if 'stopsignal' in self._conf else "TERM"
+        os.killpg(os.getpgid(self._processes[name].pid), getattr(signal, stop_signal))
         print(name, 'stopped')
 
     def status(self):

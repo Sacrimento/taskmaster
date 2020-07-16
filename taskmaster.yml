@@ -1,0 +1,19 @@
+programs:
+    nginx:
+        cmd: "/usr/bin/grep toto conf.py"
+        numprocs: 1
+        umask: 022
+        workingdir: /tmp
+        autostart: true
+        autorestart: unexpected
+        exitcodes:
+            - 0
+            - 2
+        startretries: 3
+        starttime: 5
+        stopsignal: TERM
+        stoptime: 10
+        stdout: /tmp/nginx.stdout
+        env:
+            STARTED_BY: taskmaster
+            ANSWER: 42

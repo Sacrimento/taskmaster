@@ -9,7 +9,7 @@ class Repl:
         self.auto_reload = auto_reload
         self._CMDS = {
             'start' : (lambda i: self._tm.start(self._get_arg(6, i)), 'start the PROGNAME program'),
-            'stop' : (lambda i: self._tm.start(self._get_arg(5, i)), 'stop the PROGNAME program'),
+            'stop' : (lambda i: self._tm.stop(self._get_arg(5, i)), 'stop the PROGNAME program'),
             'restart' : (self._restart, 'restart the PROGNAME program'),
             'reread' : (lambda i: self._tm.update_conf(), 'update configuration file'),
             'status' : (lambda i: self._tm.status(), 'display status for each program'),
