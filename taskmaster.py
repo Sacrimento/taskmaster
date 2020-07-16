@@ -1,5 +1,6 @@
 import subprocess
 import os
+import shlex
 import sys
 
 class Taskmaster:
@@ -32,7 +33,7 @@ class Taskmaster:
             return
         current_state = self._conf[name]
         with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
-            process = subprocess.Popen(current_state['cmd'].split(' '),
+            process = subprocess.Popen(shlex.split(current_state['cmd']),
                     stdout=stdout,
                     stderr=stderr)
             print(name, 'started')
