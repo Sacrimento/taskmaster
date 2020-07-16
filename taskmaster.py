@@ -1,4 +1,5 @@
 import subprocess
+import os
 import sys
 
 class Taskmaster:
@@ -30,7 +31,7 @@ class Taskmaster:
         if self._handle_bad_name(name):
             return
         current_state = self._conf[name]
-        with open(current_state['stdout'], 'w') if 'stdout' in current_state else sys.stdout as stdout, open(current_state['stderr'], 'w') if 'stderr' in current_state else sys.stderr as stderr:
+        with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
             process = subprocess.Popen(current_state['cmd'].split(' '),
                     stdout=stdout,
                     stderr=stderr)
@@ -41,8 +42,7 @@ class Taskmaster:
         print('stoping:', name) 
         if self._handle_bad_name(name):
             return
-        stop_signal = self.conf['stopsignal'] if 'stopsignal' in self._conf else "TERM"
-        os.killpg(os.getpgid(self._processes[name].pid), getattr(signal, stop_signal))
+        os.killpg(os.getpgid(self._processes[name].pid), getattr(signal, self.conf.get('stopsignal', "TERM")))
         print(name, 'stopped')
 
     def status(self):
