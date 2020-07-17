@@ -1,5 +1,6 @@
 import os
 
+## TODO: Get 'real' path
 LOCK_PATH = '../server/taskmaster.lock'
 
 def get_tm_pid():

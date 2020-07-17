@@ -90,6 +90,7 @@ class Taskmaster:
             return
         current_state = self._conf[name]
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
+        ## TODO: What if custom stdout or stderr does not exist ?
         with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
             process = subprocess.Popen(shlex.split(current_state['cmd']),
                     stdout=stdout,
