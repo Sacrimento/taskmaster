@@ -2,7 +2,6 @@ import subprocess
 import os
 import shlex
 import sys
-import json # ??????????????????????????????????????????
 import signal
 import socket
 
@@ -30,7 +29,7 @@ class Taskmaster:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.HOST, self.PORT))
         self.socket.listen(1)
-        self.conn, _ = self.socket.accept()
+        self.conn = None
 
         signal.signal(signal.SIGUSR1, lambda _, __: self.listen())
         signal.signal(signal.SIGINT, lambda _, __: self._deinit())
@@ -47,10 +46,13 @@ class Taskmaster:
         if os.path.isfile(self.LOCK):
             os.remove(self.LOCK)
             self.socket.close()
+        if self.conn:
             self.conn.close()
         exit(0)
 
     def listen(self):
+        if not self.conn:
+            self.conn, _ = self.socket.accept()
         data = self.conn.recv(1024).decode('utf-8')
         s = data.split()
         if len(s) < 2:
@@ -82,11 +84,12 @@ class Taskmaster:
         os.chdir(self._conf[name].get('workingdir', os.getcwd()))
 
     def start(self, name):
+        # TODO : check if running
         print('starting:', name) 
         if self._handle_bad_name(name):
             return
         current_state = self._conf[name]
-        env = {**os.environ.copy(), **json.loads(json.dumps(current_state.get('env', {})), parse_int=str)}
+        env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
         with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
             process = subprocess.Popen(shlex.split(current_state['cmd']),
                     stdout=stdout,
@@ -97,6 +100,7 @@ class Taskmaster:
         self._processes[name] = process
 
     def stop(self, name):
+        # TODO : check if running
         print('stoping:', name) 
         if self._handle_bad_name(name):
             return

@@ -42,6 +42,9 @@ class Repl:
     def run(self):
         while True:
             i = input('Taskmaster > ')
+            if not info.is_tm_running():
+                print('[Taskmaster] Fatal: Connection to taskmaster dameon lost')
+                exit(1)
             if i.split():
                 self._CMDS.get(i.split()[0], (self._unknown,))[0](i)
 
