@@ -29,6 +29,11 @@ class Taskmaster:
     def has_conf_changed(self):
         return self._conf.has_changed()
 
+    def initchildproc(self, name):
+        os.setpgrp()
+        os.umask(int(self._conf[name].get('umask', 777)))
+        os.chdir(self._conf[name].get('workingdir', os.getcwd()))
+
     def start(self, name):
         print('starting:', name) 
         if self._handle_bad_name(name):
@@ -39,7 +44,8 @@ class Taskmaster:
             process = subprocess.Popen(shlex.split(current_state['cmd']),
                     stdout=stdout,
                     stderr=stderr,
-                    env=env)
+                    env=env,
+                    preexec_fn=lambda : self.initchildproc(name))
             print(name, 'started')
         self._processes[name] = process
 
