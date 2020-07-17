@@ -2,6 +2,8 @@ import subprocess
 import os
 import shlex
 import sys
+import json
+import signal
 
 class Taskmaster:
     _processes = {}
@@ -32,10 +34,12 @@ class Taskmaster:
         if self._handle_bad_name(name):
             return
         current_state = self._conf[name]
+        env = {**os.environ.copy(), **json.loads(json.dumps(current_state.get('env', {})), parse_int=str)}
         with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
             process = subprocess.Popen(shlex.split(current_state['cmd']),
                     stdout=stdout,
-                    stderr=stderr)
+                    stderr=stderr,
+                    env=env)
             print(name, 'started')
         self._processes[name] = process
 
@@ -43,7 +47,12 @@ class Taskmaster:
         print('stoping:', name) 
         if self._handle_bad_name(name):
             return
-        os.killpg(os.getpgid(self._processes[name].pid), getattr(signal, self.conf.get('stopsignal', "TERM")))
+        try:
+            os.kill(self._processes[name].pid, getattr(signal, "SIG" + self._conf[name].get('stopsignal', "TERM")))
+        except OSError:
+            print('no pid for process', name)
+            return
+        # os.killpg(os.getpgid(self._processes[name].pid), getattr(signal, self.conf.get('stopsignal', "TERM")))
         print(name, 'stopped')
 
     def status(self):

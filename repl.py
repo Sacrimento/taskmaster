@@ -23,10 +23,14 @@ class Repl:
 
     def run(self):
         while True:
-            i = input('Taskmaster > ')
+            try:
+                i = input('Taskmaster > ')
+            except:
+                exit()
             if self.auto_reload and self._tm.has_conf_changed():
                 self._tm.update_conf()
-            self._CMDS.get(i.split()[0], (self._unknown,))[0](i)
+            if i.split():
+                self._CMDS.get(i.split()[0], (self._unknown,))[0](i)
 
     def _restart(self, inp):
         arg = self.get_arg(7, inp)

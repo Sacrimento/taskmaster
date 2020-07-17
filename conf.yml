@@ -1,9 +1,9 @@
 programs:
-  test:
-    exitcodes:
-      - 0
+    test:
+        exitcodes:
+            - 0
 
-  test3 zezez:
-    cmd: "!!"
-    autostart: True
-    test: ss
+        test3 zezez:
+            cmd: "!!"
+            autostart: True
+            test: ss
