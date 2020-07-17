@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import argparse
 from conf import Conf
@@ -13,8 +15,8 @@ def check_yml(param):
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--auto-reload', help='Automatically reload the configuration file', action='store_true')
 parser.add_argument('-f', '--file', help='The configuration file to use (default is "taskmaster.yml")', default='taskmaster.yml', type=check_yml)
-parser.add_argument('-o', '--output', help='', default='taskmaster.log')
+parser.add_argument('-o', '--outfile', help='The log file to use', default='taskmaster.log')
 
 args = parser.parse_args()
 
-Taskmaster(Conf(args.file)).run()
+Taskmaster(Conf(args.file), args.auto_reload, args.outfile).run()

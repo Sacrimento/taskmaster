@@ -12,27 +12,52 @@ class Taskmaster:
     HOST = socket.gethostname()
     PORT = 4242
 
-    def __init__(self, conf):
+    LOCK = 'taskmaster.lock'
+
+    def __init__(self, conf, autoreload, outfile):
+        if not os.path.isfile(self.LOCK):
+            with open(self.LOCK, 'w+') as f:
+                f.write(str(os.getpid()))
+        else:
+            exit(1)
+
         self._conf = conf
         self.update_conf(False)
-        
+
+        self.autoreload = autoreload
+        ## TODO logger (outfile)
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.HOST, self.PORT))
-        self.socket.listen(2)
+        self.socket.listen(1)
+        self.conn, _ = self.socket.accept()
 
-    def __del__(self):
-        self.socket.close()
+        signal.signal(signal.SIGUSR1, lambda _, __: self.listen())
+        signal.signal(signal.SIGINT, lambda _, __: self._deinit())
+        signal.signal(signal.SIGHUP, lambda _, __: self.update_conf())
 
     def run(self):
         while True:
-            self.listen()
-            # TODO : check_processes()
-            pass
+            if self.autoreload and self.has_conf_changed():
+                self.update_conf()
+            # TODO : check_processes() ## Maybe not needed, check SIGCHILD
+        self._deinit()
+
+    def _deinit(self):
+        if os.path.isfile(self.LOCK):
+            os.remove(self.LOCK)
+            self.socket.close()
+            self.conn.close()
+        exit(0)
 
     def listen(self):
-        conn, _ = self.socket.accept()
-        data = conn.recv(1024).decode('utf-8')
-        print('From online user: ' + data)
+        data = self.conn.recv(1024).decode('utf-8')
+        s = data.split()
+        if len(s) < 2:
+            ret = getattr(self, s[0])()
+        else:
+            ret = getattr(self, s[0])(*s[1:])
+        self.conn.send('OK!'.encode('utf-8'))
 
     def update_tasks(self, changes):
         for todo in ('start', 'stop'):
