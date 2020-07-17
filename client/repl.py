@@ -1,12 +1,15 @@
 import readline
 import signal
 import difflib
+import socket
 
 class Repl:
 
-    def __init__(self, tm, auto_reload):
+    HOST = socket.gethostname()
+    PORT = 4242
+
+    def __init__(self, tm=None):
         self._tm = tm
-        self.auto_reload = auto_reload
         self._CMDS = {
             'start' : (lambda i: self._tm.start(self._get_arg(6, i)), 'start the PROGNAME program'),
             'stop' : (lambda i: self._tm.stop(self._get_arg(5, i)), 'stop the PROGNAME program'),
@@ -16,21 +19,29 @@ class Repl:
             'help' : (self._help, 'display help'),
             'exit' : (lambda i: exit(0), 'exit taskmaster'),
         }
+
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((self.HOST, self.PORT))
+
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self._completer)
         signal.signal(signal.SIGHUP, lambda _, __: self.tm.update_conf())
         signal.signal(signal.SIGINT, lambda _, __: (print(), exit(0))) # Maybe a bad idea
 
+    def __del__(self):
+        self.socket.close()
+
     def run(self):
         while True:
-            try:
-                i = input('Taskmaster > ')
-            except:
-                exit()
-            if self.auto_reload and self._tm.has_conf_changed():
-                self._tm.update_conf()
+            i = input('Taskmaster > ')
+            self.send(i)
             if i.split():
                 self._CMDS.get(i.split()[0], (self._unknown,))[0](i)
+
+    def send(self, payload):
+        self.socket.send(payload.encode('utf-8'))
+        data = self.socket.recv(1024).decode('utf-8')
+        print('Received from server: ' + data)
 
     def _restart(self, inp):
         arg = self.get_arg(7, inp)

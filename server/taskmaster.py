@@ -2,15 +2,37 @@ import subprocess
 import os
 import shlex
 import sys
-import json
+import json # ??????????????????????????????????????????
 import signal
+import socket
 
 class Taskmaster:
     _processes = {}
 
+    HOST = socket.gethostname()
+    PORT = 4242
+
     def __init__(self, conf):
         self._conf = conf
         self.update_conf(False)
+        
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.bind((self.HOST, self.PORT))
+        self.socket.listen(2)
+
+    def __del__(self):
+        self.socket.close()
+
+    def run(self):
+        while True:
+            self.listen()
+            # TODO : check_processes()
+            pass
+
+    def listen(self):
+        conn, _ = self.socket.accept()
+        data = conn.recv(1024).decode('utf-8')
+        print('From online user: ' + data)
 
     def update_tasks(self, changes):
         for todo in ('start', 'stop'):
