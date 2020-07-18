@@ -14,11 +14,11 @@ class Repl:
     def __init__(self, tm=None):
         self._tm = tm
         self._CMDS = {
-            'start' : (lambda i: self.send(i) if self._has_arg(i) else None, 'start the PROGNAME program'),
-            'stop' : (lambda i: self.send(i) if self._has_arg(i) else None, 'stop the PROGNAME program'),
-            'restart' : (self._restart, 'restart the PROGNAME program'),
-            'reread' : (lambda i: self.send('update_conf'), 'update configuration file'),
-            'status' : (self.send, 'display status for each program'),
+            'start' : (self._check_send, 'start the PROGNAME program'),
+            'stop' : (self._check_send, 'stop the PROGNAME program'),
+            'restart' : (self._check_send, 'restart the PROGNAME program'),
+            'reread' : (lambda i: self._send('update_conf'), 'update configuration file'),
+            'status' : (self._send, 'display status for each program'),
             'help' : (self._help, 'display help'),
             'exit' : (lambda i: exit(0), 'exit taskmaster'),
         }
@@ -48,22 +48,15 @@ class Repl:
             if i.split():
                 self._CMDS.get(i.split()[0], (self._unknown,))[0](i)
 
-    def send(self, payload):
+    def _send(self, payload):
         os.kill(info.get_tm_pid(), signal.SIGUSR1)
         self.socket.send(payload.encode('utf-8'))
-        data = ''
-        while True:
-            buf = self.socket.recv(1024).decode('utf-8')
-            if not buf:
-                break
-            data += buf
+        data = self.socket.recv(8192).decode('utf-8') ## TODO: Handle more than 8192 but is buggy with while loop..........
         print('[Taskmaster]: ' + data)
 
-    def _restart(self, inp):
+    def _check_send(self, inp):
         if self._has_arg(inp):
-            arg = ' '.join(inp.split()[1:])
-            self.send('stop ' + arg)
-            self.send('start ' + arg)
+            self._send(inp)
 
     def _unknown(self, inp):
         closest = difflib.get_close_matches(inp, list(self._CMDS.keys()), 1, 0.5)

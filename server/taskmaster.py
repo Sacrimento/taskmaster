@@ -100,10 +100,11 @@ class Taskmaster:
                 if timedelta(0, conf.get('starttime', 0)) + status['start_date'] < now: # process is running properly
                     status['status'] = 'running'
             else:
-                if status['status'] != 'exited':
+                if status['status'] not in ('exited', 'stopped'):
                     self.logger.info('%s exited !', proc_name)
                     status['status'] = 'exited' 
-                if (status['process'].returncode not in conf.get('exitcodes', [])
+                if (status['status'] == 'exited'
+                        and status['process'].returncode not in conf.get('exitcodes', [])
                         and conf.get('autorestart', '') == 'unexpected'
                         and status['retries'] < conf.get('startretries', 128)):
                     self.start(proc_name)
@@ -119,10 +120,11 @@ class Taskmaster:
         os.chdir(self._conf[name].get('workingdir', os.getcwd()))
 
     def start(self, name):
-        # TODO : check if running
         self.logger.debug('Starting %s', name) 
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
+        if name in self._processes and self._processes[name]['status'] in ('started', 'running'):
+            return '%s is already running' % name
         current_state = self._conf[name]
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
         ## TODO: What if custom stdout or stderr does not exist ?
@@ -140,31 +142,35 @@ class Taskmaster:
         self._processes[name]['process'] = process
         self._processes[name]['start_date'] = datetime.now()
         self._processes[name]['status'] = 'started'
-        return '%s succesfully started' % name
+        return '%s successfully started' % name
 
     def stop(self, name):
-        # TODO : check if running
         self.logger.debug('Stopping %s', name)
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
         try:
             os.kill(self._processes[name]['process'].pid, getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM')))
         except OSError:
-            self.logger.error('Process "%s" already exited', name)
+            self.logger.warning('Process %s already exited', name)
             return 'process %s already exited' % name
+        self._processes[name]['status'] = 'stopped'
         # os.killpg(os.getpgid(self._processes[name].pid), getattr(signal, self.conf.get('stopsignal', "TERM")))
         self.logger.info('%s stopped !', name)
-        return '%s succesfully stopped' % name
+        return '%s successfully stopped' % name
+
+    def restart(self, name):
+        self.stop(name)
+        return self.start(name)
 
     def status(self, _):
         out = ''
         for proc_name, status in self._processes.items():
             out += '%s:\n' % proc_name
             out += '  status: %s' % status['status']
-            if status['status'] == 'exited':
-                out += ' (%d)\n' % status['process'].returncode
+            if status['status'] in ('exited', 'stopped'):
+                out += ' (%d)' % status['process'].returncode
             else:
-                out += '\n  started at: %s\n' % status['start_date'].strftime("%d/%m/%Y, %H:%M:%S")
+                out += '\n  started at: %s' % status['start_date'].strftime('%d/%m/%Y, %H:%M:%S')
         return out
 
     def _handle_bad_name(self, name):
