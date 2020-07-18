@@ -6,8 +6,7 @@ programs:
         autostart: true
         autorestart: unexpected
         exitcodes:
-            - 0
-            - 2
+            - 45
         startretries: 4
         starttime: 5
         stopsignal: TERM
