@@ -4,6 +4,7 @@ import shlex
 import sys
 import signal
 import socket
+import logging
 
 class Taskmaster:
     _processes = {}
@@ -18,13 +19,20 @@ class Taskmaster:
             with open(self.LOCK, 'w+') as f:
                 f.write(str(os.getpid()))
         else:
+            print('Taskmaster daemon already running')
             exit(1)
 
         self._conf = conf
-        self.update_conf(False)
-
         self.autoreload = autoreload
-        ## TODO logger (outfile)
+
+        self.logger = logging.getLogger('[Taskmaster]')
+        logging.basicConfig(
+                filename=outfile,
+                format='%(name)s %(asctime)s - %(levelname)s: %(message)s',
+                datefmt='%d/%m/%Y %H:%M:%S',
+                level=logging.DEBUG, ## TODO change this to info
+            )
+        self._conf.logger = self.logger
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.HOST, self.PORT))
@@ -32,23 +40,26 @@ class Taskmaster:
         self.conn = None
 
         signal.signal(signal.SIGUSR1, lambda _, __: self.listen())
-        signal.signal(signal.SIGINT, lambda _, __: self._deinit())
+        signal.signal(signal.SIGINT, lambda _, __: exit(0))
         signal.signal(signal.SIGHUP, lambda _, __: self.update_conf())
+        
+        self.logger.info('taskmaster daemon started')
+        self.update_conf(False)
 
     def run(self):
         while True:
             if self.autoreload and self.has_conf_changed():
                 self.update_conf()
             # TODO : check_processes() ## Maybe not needed, check SIGCHILD
-        self._deinit()
 
-    def _deinit(self):
+    def __del__(self):
         if os.path.isfile(self.LOCK):
             os.remove(self.LOCK)
+        if hasattr(self, 'socket'):
             self.socket.close()
-        if self.conn:
+        if hasattr(self, 'conn') and self.conn:
             self.conn.close()
-        exit(0)
+        self.logger.info('taskmaster daemon stopped')
 
     def listen(self):
         if not self.conn:
@@ -72,7 +83,8 @@ class Taskmaster:
         if not conf_changes or (not conf_changes['start'] and not conf_changes['stop']):
             return
         if p:
-            print('[Taskmaster] Config file updated !', self._conf)
+            self.logger.info('Config file updated !')
+            self.logger.debug(self._conf)
         self.update_tasks(conf_changes)
 
     def has_conf_changed(self):
@@ -85,7 +97,7 @@ class Taskmaster:
 
     def start(self, name):
         # TODO : check if running
-        print('starting:', name) 
+        self.logger.debug('Starting %s', name) 
         if self._handle_bad_name(name):
             return
         current_state = self._conf[name]
@@ -97,21 +109,20 @@ class Taskmaster:
                     stderr=stderr,
                     env=env,
                     preexec_fn=lambda : self.initchildproc(name))
-            print(name, 'started')
+        self.logger.info('%s started !', name)
         self._processes[name] = process
 
     def stop(self, name):
         # TODO : check if running
-        print('stoping:', name) 
+        self.logger.debug('Stopping %s', name)
         if self._handle_bad_name(name):
             return
         try:
             os.kill(self._processes[name].pid, getattr(signal, "SIG" + self._conf[name].get('stopsignal', "TERM")))
         except OSError:
-            print('no pid for process', name)
-            return
+            return self.logger.error('No pid for process %s', name)
         # os.killpg(os.getpgid(self._processes[name].pid), getattr(signal, self.conf.get('stopsignal', "TERM")))
-        print(name, 'stopped')
+        self.logger.info('%s stopped !', name)
 
     def status(self):
         pass
@@ -120,5 +131,5 @@ class Taskmaster:
         if not name:
             return True
         if name not in self._conf:
-            print('[Taskmaster] "'+ name +'": unknown process name')
+            self.logger.warning('%s: unknown process name', name)
             return True

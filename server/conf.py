@@ -6,12 +6,12 @@ def catch_conf_except(func):
         try:
             r = func(_self)
         except IOError as exc:
-            print('[Taskmaster] Fatal: config file error :\n', exc)
+            _self.logger.fatal('config file error :\n %s', exc)
             exit(1)
         except (yaml.scanner.ScannerError, MissingData) as exc:
-            print('[Taskmaster] Critical: config file format error :\n', exc)
+            _self.logger.fatal('config file format error :\n %s', exc)
             if _self._dict:
-                print('[Taskmaster] Info: Last working config file will be used')
+                _self.logger.info('Last working config file will be used')
             else:
                 exit(1)
         else:
