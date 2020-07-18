@@ -67,11 +67,8 @@ class Taskmaster:
             self.conn, _ = self.socket.accept()
         data = self.conn.recv(1024).decode('utf-8')
         s = data.split()
-        if len(s) < 2:
-            ret = getattr(self, s[0])()
-        else:
-            ret = getattr(self, s[0])(*s[1:])
-        self.conn.send('OK!'.encode('utf-8'))
+        ret = getattr(self, s[0])(*s[1:] if len(s) > 1 else [None])
+        self.conn.send(ret.encode('utf-8'))
 
     def update_tasks(self, changes, first=False):
         for todo in ('start', 'stop'):
@@ -81,15 +78,19 @@ class Taskmaster:
 
     def update_conf(self, p=True, first=False):
         conf_changes = self._conf.populate()
-        if not conf_changes or (not conf_changes['start'] and not conf_changes['stop']):
-            return
+        if not conf_changes:
+            return 'error occurred while updating the config file'
+        if not conf_changes['start'] and not conf_changes['stop']:
+            return 'config file updated'
         if p:
             self.logger.info('Config file updated !')
             self.logger.debug(self._conf)
         self.update_tasks(conf_changes, first)
+        return 'config file updated'
 
     def check_processes(self):
         ## TODO: WTF is 'stoptime'
+        ## TODO: does this work with 'infinite' process ?
         now = datetime.now()
 
         for proc_name, status in self._processes.items():
@@ -104,7 +105,7 @@ class Taskmaster:
                     status['status'] = 'exited' 
                 if (status['process'].returncode not in conf.get('exitcodes', [])
                         and conf.get('autorestart', '') == 'unexpected'
-                        and status['retries'] < conf.get('startretries', 2147483647)):
+                        and status['retries'] < conf.get('startretries', 128)):
                     self.start(proc_name)
                     status['retries'] += 1
 
@@ -121,7 +122,7 @@ class Taskmaster:
         # TODO : check if running
         self.logger.debug('Starting %s', name) 
         if self._handle_bad_name(name):
-            return
+            return '%s: unknown process name' % name
         current_state = self._conf[name]
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
         ## TODO: What if custom stdout or stderr does not exist ?
@@ -139,22 +140,32 @@ class Taskmaster:
         self._processes[name]['process'] = process
         self._processes[name]['start_date'] = datetime.now()
         self._processes[name]['status'] = 'started'
+        return '%s succesfully started' % name
 
     def stop(self, name):
         # TODO : check if running
         self.logger.debug('Stopping %s', name)
         if self._handle_bad_name(name):
-            return
+            return '%s: unknown process name' % name
         try:
-            os.kill(self._processes[name].pid, getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM')))
+            os.kill(self._processes[name]['process'].pid, getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM')))
         except OSError:
-            return self.logger.error('No pid for process %s', name)
+            self.logger.error('Process "%s" already exited', name)
+            return 'process %s already exited' % name
         # os.killpg(os.getpgid(self._processes[name].pid), getattr(signal, self.conf.get('stopsignal', "TERM")))
         self.logger.info('%s stopped !', name)
+        return '%s succesfully stopped' % name
 
-    def status(self):
-        for proc_name, status in self._processes:
-            print(proc_name, status)
+    def status(self, _):
+        out = ''
+        for proc_name, status in self._processes.items():
+            out += '%s:\n' % proc_name
+            out += '  status: %s' % status['status']
+            if status['status'] == 'exited':
+                out += ' (%d)\n' % status['process'].returncode
+            else:
+                out += '\n  started at: %s\n' % status['start_date'].strftime("%d/%m/%Y, %H:%M:%S")
+        return out
 
     def _handle_bad_name(self, name):
         if not name:

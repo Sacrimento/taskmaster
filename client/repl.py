@@ -51,8 +51,13 @@ class Repl:
     def send(self, payload):
         os.kill(info.get_tm_pid(), signal.SIGUSR1)
         self.socket.send(payload.encode('utf-8'))
-        data = self.socket.recv(1024).decode('utf-8')
-        print('Received from server: ' + data)
+        data = ''
+        while True:
+            buf = self.socket.recv(1024).decode('utf-8')
+            if not buf:
+                break
+            data += buf
+        print('[Taskmaster]: ' + data)
 
     def _restart(self, inp):
         if self._has_arg(inp):
