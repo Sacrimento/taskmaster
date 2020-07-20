@@ -11,8 +11,9 @@ class Repl:
     HOST = socket.gethostname()
     PORT = 4242
 
-    def __init__(self, tm=None):
+    def __init__(self, lock_file, tm=None):
         self._tm = tm
+        self.lock_file=lock_file
         self._CMDS = {
             'start' : (self._check_send, 'start the PROGNAME program'),
             'stop' : (self._check_send, 'stop the PROGNAME program'),
@@ -23,7 +24,7 @@ class Repl:
             'exit' : (lambda i: exit(0), 'exit taskmaster'),
         }
 
-        if not info.is_tm_running():
+        if not info.is_tm_running(self.lock_file):
             print('[Taskmaster] Fatal : taskmaster daemon not running')
             exit(1)
 
@@ -32,7 +33,7 @@ class Repl:
 
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self._completer)
-        signal.signal(signal.SIGHUP, lambda _, __: os.kill(info.get_tm_pid(), signal.SIGHUP))
+        signal.signal(signal.SIGHUP, lambda _, __: os.kill(info.get_tm_pid(self.lock_file), signal.SIGHUP))
         signal.signal(signal.SIGINT, lambda _, __: (print(), exit(0))) # Maybe a bad idea
 
     def __del__(self):
@@ -41,15 +42,18 @@ class Repl:
 
     def run(self):
         while True:
-            i = input('Taskmaster > ')
-            if not info.is_tm_running():
+            try:
+                i = input('Taskmaster > ')
+            except EOFError:
+                exit()
+            if not info.is_tm_running(self.lock_file):
                 print('[Taskmaster] Fatal: Connection to taskmaster dameon lost')
                 exit(1)
             if i.split():
                 self._CMDS.get(i.split()[0], (self._unknown,))[0](i)
 
     def _send(self, payload):
-        os.kill(info.get_tm_pid(), signal.SIGUSR1)
+        os.kill(info.get_tm_pid(self.lock_file), signal.SIGUSR1)
         self.socket.send(payload.encode('utf-8'))
         data = self.socket.recv(8192).decode('utf-8') ## TODO: Handle more than 8192 but is buggy with while loop..........
         print('[Taskmaster]: ' + data)

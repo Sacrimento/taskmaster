@@ -1,12 +1,9 @@
 import os
 
-## TODO: Get 'real' path
-LOCK_PATH = '../server/taskmaster.lock'
-
-def get_tm_pid():
-    if os.path.isfile(LOCK_PATH):
-        with open(LOCK_PATH, 'r') as f:
+def get_tm_pid(lock_file):
+    if os.path.isfile(lock_file):
+        with open(lock_file, 'r') as f:
             return int(f.read())
 
-def is_tm_running():
-    return os.path.isfile(LOCK_PATH)
+def is_tm_running(lock_file):
+    return os.path.isfile(lock_file)

@@ -13,11 +13,12 @@ class Taskmaster:
     HOST = socket.gethostname()
     PORT = 4242
 
-    LOCK = 'taskmaster.lock'
+    def __init__(self, conf, autoreload, outfile, lock_file):
+        self.lock_file = lock_file
+        self.logger = logging.getLogger('[Taskmaster]')
 
-    def __init__(self, conf, autoreload, outfile):
-        if not os.path.isfile(self.LOCK):
-            with open(self.LOCK, 'w+') as f:
+        if not os.path.isfile(lock_file):
+            with open(lock_file, 'w+') as f:
                 f.write(str(os.getpid()))
         else:
             print('Taskmaster daemon already running')
@@ -26,7 +27,6 @@ class Taskmaster:
         self._conf = conf
         self.autoreload = autoreload
 
-        self.logger = logging.getLogger('[Taskmaster]')
         logging.basicConfig(
                 filename=outfile,
                 format='%(name)s %(asctime)s - %(levelname)s: %(message)s',
@@ -54,8 +54,8 @@ class Taskmaster:
             self.check_processes()
 
     def __del__(self):
-        if os.path.isfile(self.LOCK):
-            os.remove(self.LOCK)
+        if os.path.isfile(self.lock_file):
+            os.remove(self.lock_file)
         if hasattr(self, 'socket'):
             self.socket.close()
         if hasattr(self, 'conn') and self.conn:
