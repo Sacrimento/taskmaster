@@ -1,6 +1,6 @@
 programs:
     nginx:
-        cmd: cat Makefile
+        cmd: echo coucou
         numprocs: 1
         umask: 022
         autostart: true

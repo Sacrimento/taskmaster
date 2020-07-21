@@ -1,15 +1,20 @@
-import readline
-import signal
-import difflib
-import socket
 import os
+import sys
+import signal
+import socket
+import inspect
+import difflib
+import readline
 
 import get_tm_info as info
 
-class Repl:
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 
-    HOST = socket.gethostname()
-    PORT = 4242
+from tm_socket import send, recv, HOST, PORT
+
+class Repl:
 
     def __init__(self, lock_file, tm=None):
         self._tm = tm
@@ -29,7 +34,7 @@ class Repl:
             exit(1)
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.HOST, self.PORT))
+        self.socket.connect((HOST, PORT))
 
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self._completer)
@@ -54,8 +59,8 @@ class Repl:
 
     def _send(self, payload):
         os.kill(info.get_tm_pid(self.lock_file), signal.SIGUSR1)
-        self.socket.send(payload.encode('utf-8'))
-        data = self.socket.recv(8192).decode('utf-8') ## TODO: Handle more than 8192 but is buggy with while loop..........
+        sent = send(self.socket, payload)
+        data = recv(self.socket)
         print('[Taskmaster]: ' + data)
 
     def _check_send(self, inp):

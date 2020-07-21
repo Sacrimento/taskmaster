@@ -4,14 +4,18 @@ import shlex
 import signal
 import socket
 import logging
+import inspect
 import subprocess
 from datetime import datetime, timedelta
 
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
+from tm_socket import send, recv, HOST, PORT
+
 class Taskmaster:
     _processes = {}
-
-    HOST = socket.gethostname()
-    PORT = 4242
 
     def __init__(self, conf, autoreload, outfile, lock_file):
         self.lock_file = lock_file
@@ -36,7 +40,7 @@ class Taskmaster:
         self._conf.logger = self.logger
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.bind((self.HOST, self.PORT))
+        self.socket.bind((HOST, PORT))
         self.socket.listen(1)
         self.conn = None
 
@@ -65,10 +69,15 @@ class Taskmaster:
     def listen(self):
         if not self.conn:
             self.conn, _ = self.socket.accept()
-        data = self.conn.recv(1024).decode('utf-8')
+        data = recv(self.conn)
         s = data.split()
+        if len(s) == 0:
+            self.logger.info('invalid commmand received')
+            exit(1) # if we received an invalid command that mean it doesnt come from our client
+            return
+
         ret = getattr(self, s[0])(*s[1:] if len(s) > 1 else [None])
-        self.conn.send(ret.encode('utf-8'))
+        send(self.conn, ret)
 
     def update_tasks(self, changes, first=False):
         for todo in ('start', 'stop'):
