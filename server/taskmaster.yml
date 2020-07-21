@@ -1,6 +1,6 @@
 programs:
     nginx:
-        cmd: echo toto
+        cmd: cat Makefile
         numprocs: 1
         umask: 022
         autostart: true

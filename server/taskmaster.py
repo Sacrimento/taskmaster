@@ -1,10 +1,10 @@
-import subprocess
 import os
-import shlex
 import sys
+import shlex
 import signal
 import socket
 import logging
+import subprocess
 from datetime import datetime, timedelta
 
 class Taskmaster:
@@ -88,28 +88,37 @@ class Taskmaster:
         self.update_tasks(conf_changes, first)
         return 'config file updated'
 
+    def kill(self, name, signal):
+        try:
+            os.kill(self._processes[name]['process'].pid, signal)
+        except OSError:
+            self.logger.warning('Process %s already exited', name)
+            return 'process %s already exited' % name
+
     def check_processes(self):
-        ## TODO: WTF is 'stoptime'
-        ## TODO: does this work with 'infinite' process ?
         now = datetime.now()
 
         for proc_name, status in self._processes.items():
             conf = self._conf[proc_name]
-            running = not status['process'].poll()
-            if not running:
+            running = status['process'].poll() is None
+            if (status['status'] == 'stopped'
+                 and status['stop_time'] - now > timedelta(0, conf.get('stop_time', 0))
+                 and running):
+                    self.kill(proc_name, signal.SIGKILL)
+
+            if running:
                 if timedelta(0, conf.get('starttime', 0)) + status['start_date'] < now: # process is running properly
                     status['status'] = 'running'
             else:
                 if status['status'] not in ('exited', 'stopped'):
                     self.logger.info('%s exited !', proc_name)
-                    status['status'] = 'exited' 
+                    status['status'] = 'exited'
                 if (status['status'] == 'exited'
                         and status['process'].returncode not in conf.get('exitcodes', [])
                         and conf.get('autorestart', '') == 'unexpected'
                         and status['retries'] < conf.get('startretries', 128)):
                     self.start(proc_name)
                     status['retries'] += 1
-
 
     def has_conf_changed(self):
         return self._conf.has_changed()
@@ -127,13 +136,17 @@ class Taskmaster:
             return '%s is already running' % name
         current_state = self._conf[name]
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
-        ## TODO: What if custom stdout or stderr does not exist ?
-        with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
-            process = subprocess.Popen(shlex.split(current_state['cmd']),
-                    stdout=stdout,
-                    stderr=stderr,
-                    env=env,
-                    preexec_fn=lambda : self.initchildproc(name))
+        try:
+            with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
+                process = subprocess.Popen(shlex.split(current_state['cmd']),
+                        stdout=stdout,
+                        stderr=stderr,
+                        env=env,
+                        preexec_fn=lambda : self.initchildproc(name))
+        except IOError as e:
+            print(e)
+            exit("un petit log au moins") # TODO: exit properly
+
         self.logger.info('%s started !', name)
         if name not in self._processes:
             self._processes[name] = {
@@ -146,15 +159,13 @@ class Taskmaster:
 
     def stop(self, name):
         self.logger.debug('Stopping %s', name)
+
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
-        try:
-            os.kill(self._processes[name]['process'].pid, getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM')))
-        except OSError:
-            self.logger.warning('Process %s already exited', name)
-            return 'process %s already exited' % name
+
+        self.kill(name, getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM')))
+        self._processes[name]['stop_time'] = datetime.now()
         self._processes[name]['status'] = 'stopped'
-        # os.killpg(os.getpgid(self._processes[name].pid), getattr(signal, self.conf.get('stopsignal', "TERM")))
         self.logger.info('%s stopped !', name)
         return '%s successfully stopped' % name
 

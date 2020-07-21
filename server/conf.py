@@ -8,7 +8,7 @@ def catch_conf_except(func):
         except IOError as exc:
             _self.logger.fatal('config file error :\n %s', exc)
             exit(1)
-        except (yaml.scanner.ScannerError, MissingData) as exc:
+        except (yaml.scanner.ScannerError, MissingData, yaml.parser.ParserError) as exc:
             _self.logger.fatal('config file format error :\n %s', exc)
             if _self._dict:
                 _self.logger.info('Last working config file will be used')
