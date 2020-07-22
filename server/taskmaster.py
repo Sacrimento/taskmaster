@@ -75,9 +75,8 @@ class Taskmaster:
             exit(1)
             return
 
-        print(s)
         self.logger.info(s)
-        ret = getattr(self, s[0])(*s[1:] if len(s) > 1 else [None])
+        ret = getattr(self, s[0])(' '.join(s[1:]) if len(s) > 1 else [None])
         send(self.conn, ret)
 
     def update_tasks(self, changes, first=False):
