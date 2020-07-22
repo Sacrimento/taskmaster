@@ -1,5 +1,6 @@
 #!/bin/bash
 chmod +x ./test/script/*
+MAKEFLAGS="--no-print-directory -s"
 
 test_yml()
 {
@@ -8,8 +9,9 @@ test_yml()
 		echo "Testing [$(basename "${file}")]"
 		echo "============================="
 		echo ""
-		make server FILE=$file >/dev/null
+		make  server FILE=$file
 		sleep 1
+		echo ""
 	done
 	echo exit | ./client/client.py >/dev/null
 }
