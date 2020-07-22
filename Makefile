@@ -9,13 +9,17 @@ _sleep:
 
 server:
 	@echo starting server...
-	@rm -f $(DEFAULT_LOCK_FILE)
 	@killall -q python3 || true
-	@python3 server/server.py -f $(DEFAULT_CONF_FILE) &
+	@rm -f $(DEFAULT_LOCK_FILE)
+	@./server/server.py -f $(if $(FILE),$(FILE),$(DEFAULT_CONF_FILE)) &
 
 client:
 	@echo starting client...
-	@python3 ./client/client.py || echo client has exited
+	@./client/client.py || echo client has exited
+	@echo exit | ./client/client.py
+
+test:
+	@./test/unit_tester.sh || test failed
 
 
-.PHONY: server client
+.PHONY: server client test

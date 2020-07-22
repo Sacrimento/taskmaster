@@ -12,5 +12,4 @@ def recv(sock):
     except ConnectionResetError:
         print('[Taskmaster] Fatal: Connection to taskmaster dameon lost')
         exit(1)
-        chunks.append(chunk)
     return msg.decode('utf-8')

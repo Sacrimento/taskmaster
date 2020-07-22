@@ -59,7 +59,7 @@ class Conf:
         key_changes = set(old) ^ set(new)
         for key in key_changes:
             r['start' if key in new else 'stop'].append(key)
-        
+
         for prog, prog_attr in new.items():
             if prog not in key_changes:
                 for k, v in prog_attr.items():

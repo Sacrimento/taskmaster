@@ -47,7 +47,6 @@ class Taskmaster:
         signal.signal(signal.SIGUSR1, lambda _, __: self.listen())
         signal.signal(signal.SIGINT, lambda _, __: exit(0))
         signal.signal(signal.SIGHUP, lambda _, __: self.update_conf())
-        
         self.logger.info('taskmaster daemon started')
         self.update_conf(False, True)
 
@@ -73,9 +72,11 @@ class Taskmaster:
         s = data.split()
         if len(s) == 0:
             self.logger.info('invalid commmand received')
-            exit(1) # if we received an invalid command that mean it doesnt come from our client
+            exit(1)
             return
 
+        print(s)
+        self.logger.info(s)
         ret = getattr(self, s[0])(*s[1:] if len(s) > 1 else [None])
         send(self.conn, ret)
 

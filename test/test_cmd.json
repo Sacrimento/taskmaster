@@ -1,0 +1,13 @@
+{
+	"status": {
+		"cmd": ["status"]
+	},
+	"start, stop, restart":{
+		"cmd": ["start", "stop", "restart"],
+		"yaml":"classic.yml"
+	},
+	"stoptime":{
+
+		"yaml": "stoptime.yml"
+	}
+}

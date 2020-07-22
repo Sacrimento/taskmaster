@@ -14,3 +14,19 @@ programs:
         env:
             STARTED_BY: taskmaster
             ANSWER: 44
+
+    bibu:
+        cmd: echo coucou
+        numprocs: 1
+        umask: 022
+        autostart: true
+        autorestart: unexpected
+        exitcodes:
+            - 0
+        startretries: 4
+        starttime: 5
+        stopsignal: TERM
+        stoptime: 10
+        env:
+            STARTED_BY: taskmaster
+            ANSWER: 44

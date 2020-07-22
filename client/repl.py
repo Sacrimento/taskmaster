@@ -41,6 +41,8 @@ class Repl:
         signal.signal(signal.SIGHUP, lambda _, __: os.kill(info.get_tm_pid(self.lock_file), signal.SIGHUP))
         signal.signal(signal.SIGINT, lambda _, __: (print(), exit(0))) # Maybe a bad idea
 
+        atexit.register(toto)
+
     def __del__(self):
         if hasattr(self, 'socket'):
             self.socket.close()
@@ -81,6 +83,6 @@ class Repl:
         return opts[state] if state < len(opts) else None
 
     def _has_arg(self, inp):
-        if len(inp.split()) > 1:
+        if len(inp.split()) == 1: #it takes only one arg right ?
             return True
         print('[Taskmaster]', inp, 'expects a PROGNAME argument')
