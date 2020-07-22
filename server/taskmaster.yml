@@ -15,7 +15,7 @@ programs:
             STARTED_BY: taskmaster
             ANSWER: 44
 
-    bibu:
+    t t:
         cmd: echo coucou
         numprocs: 1
         umask: 022

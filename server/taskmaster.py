@@ -185,8 +185,8 @@ class Taskmaster:
     def status(self, _):
         out = ''
         for proc_name, status in self._processes.items():
-            out += '%s:\n' % proc_name
-            out += '  status: %s' % status['status']
+            out += '\n%s:\n' % proc_name
+            out += '  status: %s' % status['status'] 
             if status['status'] in ('exited', 'stopped'):
                 out += ' (%d)' % status['process'].returncode
             else:
