@@ -1,6 +1,19 @@
 #!/bin/bash
 chmod +x ./test/script/*
 
+test_yml()
+{
+	for file in ./test/yaml/*
+	do
+		echo "Testing [$(basename "${file}")]"
+		echo "============================="
+		echo ""
+		make server FILE=$file >/dev/null
+		sleep 1
+	done
+	echo exit | ./client/client.py >/dev/null
+}
+
 test_tcp()
 {
 	make server >/dev/null
@@ -13,13 +26,16 @@ run_test()
 {
 	echo "new test"
 	echo "============================="
+	echo ""
 	make server FILE=$2 >/dev/null
 	sleep 1
 	OUTPUT=`($1) | ./client/client.py`
 	echo $OUTPUT
 	echo exit  | ./client/client.py >/dev/null
+	echo ""
 }
 
+test_yml
 # test_tcp
 #status
 run_test "echo status"

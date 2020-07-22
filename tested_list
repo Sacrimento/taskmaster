@@ -1,10 +1,10 @@
 X: Not tested
 O: Tested
 
-[X] Voir le status de tous les programmes décris dans le fichier de configuration (avec la commande "status")
-[X] Lancer / arrêter / relancer les programmes
+[O] Voir le status de tous les programmes décris dans le fichier de configuration (avec la commande "status")
+[O] Lancer / arrêter / relancer les programmes
 [X] Recharger le fichier de configuration sans que le programme principal s’arrête
-[X] Arrêter le programme principal
+[O] Arrêter le programme principal
 
 Le fichier de configuration doit autoriser l’utilisateur à spécifier ce qui suit, pour
 chaque programme cela doit être supervisé :
