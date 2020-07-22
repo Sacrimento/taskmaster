@@ -5,7 +5,7 @@ all: server _sleep client
 
 
 _sleep:
-	sleep 1
+	@sleep 1
 
 server:
 	@echo starting server...
