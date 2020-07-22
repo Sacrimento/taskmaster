@@ -1,0 +1,15 @@
+programs:
+    unexpected:
+        cmd: echo coucou
+        autostart: true
+        autorestart: unexpected
+
+    always:
+        cmd: echo coucou
+        autostart: true
+        autorestart: always
+
+    never:
+        cmd: echo coucou
+        autostart: true
+        autorestart: never

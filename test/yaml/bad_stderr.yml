@@ -1,0 +1,4 @@
+programs:
+    umask:
+        cmd: echo bad stderr
+        stderr: /

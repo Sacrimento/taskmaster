@@ -104,6 +104,16 @@ class Taskmaster:
             self.logger.warning('Process %s already exited', name)
             return 'process %s already exited' % name
 
+    def check_start_retry(self, status, name):
+        conf = self._conf[proc_name]
+
+        if status['retries'] > conf.get('startretries', 128):
+            return
+        if conf.get('autorestart', '') == 'never':
+            return
+        status['retries'] += 1
+        self.start(proc_name)
+
     def check_processes(self):
         now = datetime.now()
 
@@ -122,12 +132,13 @@ class Taskmaster:
                 if status['status'] not in ('exited', 'stopped'):
                     self.logger.info('%s exited !', proc_name)
                     status['status'] = 'exited'
-                if (status['status'] == 'exited'
-                        and status['process'].returncode not in conf.get('exitcodes', [])
-                        and conf.get('autorestart', '') == 'unexpected'
-                        and status['retries'] < conf.get('startretries', 128)):
-                    self.start(proc_name)
-                    status['retries'] += 1
+                if (conf.get('autorestart', '') == 'unexpected'
+                    and status['status'] == 'exited'
+                    and status['process'].returncode not in conf.get('exitcodes', [])):
+                    self.check_start_retry(status, proc_name)
+                if (conf.get('autorestart', '') == 'always'
+                    and status['status'] in ('exited', 'stopped')):
+                    self.check_start_retry(status, proc_name)
 
     def has_conf_changed(self):
         return self._conf.has_changed()

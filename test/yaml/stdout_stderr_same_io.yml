@@ -1,0 +1,5 @@
+programs:
+    umask:
+        cmd: echo bad stdout and stderr
+        stdout: toto
+        stderr: toto

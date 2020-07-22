@@ -10,15 +10,15 @@ Le fichier de configuration doit autoriser l’utilisateur à spécifier ce qui 
 chaque programme cela doit être supervisé :
 
 [O] La commande à utiliser pour lancer le programme
-[X] Le nombre de processus à lancer et laisser tourner
-[X] Choisir de lancer ce programme au démarrage ou non
+[O] Le nombre de processus à lancer et laisser tourner
+[O] Choisir de lancer ce programme au démarrage ou non
 [X] Choisir si le programme doit toujours être relancé, jamais, ou uniquement lorsqu’il s’arrête de manière innatendue
-[X] Quel code de retour represente une sortie "attendue" du programme
+[O] Quel code de retour represente une sortie "attendue" du programme
 [X] Combien de temps le programme doit-il tourner après son démarrage pour que l’on considère qu’il s’est "lancé correctement"
 [X] Combien de fois un redémarrage doit être réalisé avant de s’arrêter
 [X] Quel signal doit être utilisé pour arrêter (i.e. exit gracefully) le programme
 [O] Combien de temps d’attente après un graceful stop avant de kill le programme
-[X] Options pour retirer les stdout/stderr du programme ou pour rediriger vers des fichiers
+[O] Options pour retirer les stdout/stderr du programme ou pour rediriger vers des fichiers
 [O] Des variables d’environnement a set avant de lancer le programme
 [O] Un répertoire de travail a set avant de lancer le programme
 [O] Un umask a set avant de lancer le programme

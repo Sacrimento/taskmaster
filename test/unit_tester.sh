@@ -1,4 +1,5 @@
 #!/bin/bash
+
 chmod +x ./test/script/*
 MAKEFLAGS="--no-print-directory -s"
 
@@ -10,7 +11,6 @@ test_yml()
 		echo "============================="
 		echo ""
 		make  server FILE=$file
-		sleep 1
 		echo ""
 	done
 	echo exit | ./client/client.py >/dev/null
@@ -51,6 +51,5 @@ run_test "./test/script/start_stop_restart.sh"
 ##exit
 run_test "echo exit"
 
-##startretries
-
-#echo ""
+#startretries
+run_test "" "./test/yaml/startretries.yml"

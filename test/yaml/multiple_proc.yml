@@ -1,0 +1,5 @@
+programs:
+    nginx:
+        cmd: echo MULTIPROC
+        numprocs: 4
+

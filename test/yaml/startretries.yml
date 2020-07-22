@@ -1,0 +1,5 @@
+programs:
+    nginx:
+        cmd: echo start retry; (exit 1)
+        startretries: 4
+

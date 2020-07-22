@@ -1,6 +1,4 @@
 programs:
-
     umask:
         cmd: pwd
-        numprocs: 1
         workingdir: /tmp
