@@ -1,0 +1,10 @@
+programs:
+
+    start:
+        cmd: echo start
+        stdout: /
+
+    stop:
+        cmd: cat /dev/random
+        stderr: /dev/null
+        stdout: /dev/null

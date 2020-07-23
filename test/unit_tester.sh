@@ -44,7 +44,7 @@ test_yml
 run_test "echo status"
 
 #start, stop, restart
-run_test "./test/script/start_stop_restart.sh"
+run_test "./test/script/start_stop_restart.sh" "./test/yaml/start_stop_restart.yml"
 
 ##stoptime
 # run_test  "./test/script/stoptime.sh"

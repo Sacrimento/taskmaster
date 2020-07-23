@@ -97,23 +97,13 @@ class Taskmaster:
         self.update_tasks(conf_changes, first)
         return 'config file updated'
 
-    def kill(self, name, status, signal):
-        try:
-            os.kill(status['process'].pid, signal)
-        except OSError:
-            self.logger.warning('Process %s already exited', name)
-            return 'process %s already exited' % name
-        status['stop_time']   = datetime.now()
-        status['status']      = 'stopped'
-        return status
-
-    def check_start_retry(self, status, conf):
+    def check_start_retry(self, name, status, conf):
         if status['retries'] > conf.get('startretries', 128):
-            return
+            return status
         if conf.get('autorestart', '') == 'never':
-            return
+            return status
         status['retries'] += 1
-        self.start(name)
+        return self._start(name, status)
 
     def check_processes(self):
         now = datetime.now()
@@ -137,10 +127,10 @@ class Taskmaster:
                     if (conf.get('autorestart', '') == 'unexpected'
                         and status['status'] == 'exited'
                         and status['process'].returncode not in conf.get('exitcodes', [])):
-                        status = self.check_start_retry(status, conf)
+                        status = self.check_start_retry(proc_name, status, conf)
                     if (conf.get('autorestart', '') == 'always'
                         and status['status'] in ('exited', 'stopped')):
-                        status = self.check_start_retry(status, conf)
+                        status = self.check_start_retry(proc_name, status, conf)
 
     def has_conf_changed(self):
         return self._conf.has_changed()
@@ -189,7 +179,18 @@ class Taskmaster:
         for i in range(self._conf[name].get('numprocs', 1)):
             elem = status[i] if len(status) > i else {}
             status.insert(i, self._start(name, elem))
+        self._processes[name] = status
         return '%s successfully started' % name
+
+    def kill(self, name, status, signal):
+        try:
+            os.kill(status['process'].pid, signal)
+        except OSError:
+            self.logger.warning('Process %s already exited', name)
+            return 'process %s already exited' % name
+        status['stop_time']   = datetime.now()
+        status['status']      = 'stopped'
+        return status
 
     def stop(self, name):
         self.logger.debug('Stopping %s', name)
@@ -197,8 +198,9 @@ class Taskmaster:
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
 
+        sign = getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM'))
         for i, proc in self._processses[name]:
-            self._processes[name][i] = self.kill(proc, getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM')))
+            self._processes[name].insert(i, self.kill(proc, sign))
 
         self.logger.info('%s stopped !', name)
         return '%s successfully stopped' % name
@@ -211,11 +213,12 @@ class Taskmaster:
         out = ''
         for proc_name, status in self._processes.items():
             out += '\n%s:\n' % proc_name
-            out += '  status: %s' % status['status'] 
-            if status['status'] in ('exited', 'stopped'):
-                out += ' (%d)' % status['process'].returncode
-            else:
-                out += '\n  started at: %s' % status['start_date'].strftime('%d/%m/%Y, %H:%M:%S')
+            for proc in status:
+                out += '  status: %s' % proc['status'] 
+                if proc['status'] in ('exited', 'stopped'):
+                    out += ' (%d)' % proc['process'].returncode
+                else:
+                    out += '\n  started at: %s' % proc['start_date'].strftime('%d/%m/%Y, %H:%M:%S')
         return out
 
     def _handle_bad_name(self, name):

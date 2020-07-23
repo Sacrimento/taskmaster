@@ -1,6 +1,6 @@
 programs:
     nginx:
-        cmd: echo coucou
+        cmd: cat /dev/random
         numprocs: 1
         umask: 022
         autostart: true
@@ -9,11 +9,13 @@ programs:
             - 0
         startretries: 4
         starttime: 5
-        stopsignal: TERM
+        stopsignal: term
+        stdout: /dev/null
+        stderr: /dev/null
         stoptime: 10
         env:
-            STARTED_BY: taskmaster
-            ANSWER: 44
+            started_by: taskmaster
+            answer: 44
 
     t t:
         cmd: echo coucou

@@ -1,4 +1,4 @@
 #!/bin/bash
 
-text='start toto\nstop\nrestart\n'
+text="start start\nstop stop\nrestart stop\nstop stop\n"
 printf "${text}"
