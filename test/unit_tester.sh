@@ -10,10 +10,11 @@ test_yml()
 		echo "Testing [$(basename "${file}")]"
 		echo "============================="
 		echo ""
-		make  server FILE=$file
+		make server FILE=$file
 		echo ""
+		echo exit | ./client/client.py >/dev/null
+		sleep 1
 	done
-	echo exit | ./client/client.py >/dev/null
 }
 
 test_tcp()
