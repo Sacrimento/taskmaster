@@ -11,7 +11,7 @@ server:
 	@echo starting server...
 	@killall -q python3 || true
 	@rm -f $(DEFAULT_LOCK_FILE)
-	@./server/server.py -f $(if $(FILE),$(FILE),$(DEFAULT_CONF_FILE)) &
+	@./server/server.py -o /tmp/taskmaster.log -f $(if $(FILE),$(FILE),$(DEFAULT_CONF_FILE)) &
 
 client:
 	@echo starting client...

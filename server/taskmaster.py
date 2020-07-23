@@ -150,12 +150,12 @@ class Taskmaster:
         os.umask(int(self._conf[name].get('umask', 777)))
         os.chdir(self._conf[name].get('workingdir', os.getcwd()))
 
-    def _start(self, status):
+    def _start(self, name, status):
         current_state = self._conf[name]
 
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
 
-        if status.get(['status'], '') in ('started', 'running'):
+        if status.get('status', '') in ('started', 'running'):
             return
             # return '%s is already running' % name
         try:
@@ -185,9 +185,10 @@ class Taskmaster:
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
 
-        for i in self._processes:
-            self._processes[i] = self._start(name, self.process[i])
-        # self._processes = [ self._start(name, self._process[x]) for x in current_state.get('numprocs', 1) ]
+        status = self._processes.get(name, [])
+        for i in range(self._conf[name].get('numprocs', 1)):
+            elem = status[i] if status else {}
+            status.insert(i, self._start(name, elem))
         return '%s successfully started' % name
 
     def stop(self, name):
@@ -197,7 +198,7 @@ class Taskmaster:
             return '%s: unknown process name' % name
 
         for i, proc in self._processses[name]:
-            self._processes[i] = self.kill(proc, getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM')))
+            self._processes[name][i] = self.kill(proc, getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM')))
 
         self.logger.info('%s stopped !', name)
         return '%s successfully stopped' % name
