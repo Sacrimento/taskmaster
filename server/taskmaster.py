@@ -187,7 +187,7 @@ class Taskmaster:
 
         status = self._processes.get(name, [])
         for i in range(self._conf[name].get('numprocs', 1)):
-            elem = status[i] if status else {}
+            elem = status[i] if len(status) > i else {}
             status.insert(i, self._start(name, elem))
         return '%s successfully started' % name
 
