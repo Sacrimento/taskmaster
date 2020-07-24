@@ -54,3 +54,7 @@ run_test "echo exit"
 
 #startretries
 run_test "" "./test/yaml/startretries.yml"
+
+#signal
+gcc ./test/script/signal_program.c -o ./test/script/signal
+run_test "echo stop signal"  "./test/yaml/signal.yml"
