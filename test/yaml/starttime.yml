@@ -1,4 +1,4 @@
 programs:
-    nginx:
+    starttime:
         cmd: echo starttime
         starttime: 10

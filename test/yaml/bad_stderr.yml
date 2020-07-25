@@ -1,4 +1,4 @@
 programs:
-    umask:
+    stderr:
         cmd: echo bad stderr
         stderr: /

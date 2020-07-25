@@ -1,5 +1,5 @@
 programs:
-    umask:
+    stdout_stderr_same_io:
         cmd: echo bad stdout and stderr
         stdout: toto
         stderr: toto

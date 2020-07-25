@@ -1,6 +1,5 @@
 programs:
-    nginx:
+    numprocs:
         cmd: echo MULTIPROC
         numprocs: 4
         startretries: 4
-

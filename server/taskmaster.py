@@ -214,6 +214,7 @@ class Taskmaster:
             out += '\n%s:\n' % proc_name
             for proc in status:
                 out += '  status: %s' % proc['status'] 
+                print(proc)
                 if proc['status'] in ('exited', 'stopped'):
                     out += ' (%d)' % proc['process'].returncode
                 else:

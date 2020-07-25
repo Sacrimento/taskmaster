@@ -9,10 +9,11 @@ test_yml()
 	for file in ./test/yaml/*
 	do
 		BASENAME=$(basename "${file}")
+		log=${BASENAME%.yml}.log
 		echo "Testing [${BASENAME}]"
 		echo "============================="
 		echo ""
-		make server FILE=$file OUTPUT=./test/output/${BASENAME}
+		make server FILE=$file OUTPUT=./test/output/${log}
 		echo ""
 		echo exit | ./client/client.py >/dev/null
 		sleep 1

@@ -1,6 +1,4 @@
 programs:
-    nginx:
+    autostart:
         cmd: echo AUTOSTART
-        umask: 022
         autostart: false
-

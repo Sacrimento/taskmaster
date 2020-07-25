@@ -1,4 +1,4 @@
 programs:
-    umask:
+    stdout:
         cmd: echo bad stdout
         stdout: /
