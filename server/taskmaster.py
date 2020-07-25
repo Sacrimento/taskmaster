@@ -75,7 +75,6 @@ class Taskmaster:
             exit(1)
             return
 
-        self.logger.info(s)
         ret = getattr(self, s[0])(' '.join(s[1:]) if len(s) > 1 else [None])
         send(self.conn, ret)
 
@@ -110,7 +109,6 @@ class Taskmaster:
 
         for proc_name, stat in self._processes.items():
             for i, status in enumerate(stat):
-                print(proc_name)
                 conf = self._conf[proc_name]
                 running = status['process'].poll() is None
                 if (status['status'] == 'stopped'
@@ -201,7 +199,7 @@ class Taskmaster:
 
         sign = getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM'))
         for i, proc in enumerate(self._processes[name]):
-            self._processes[i] = self.kill(name, proc, sign)
+            self._processes[name][i] = self.kill(name, proc, sign)
 
         self.logger.info('%s stopped !', name)
         return '%s successfully stopped' % name

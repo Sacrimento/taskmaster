@@ -1,16 +1,18 @@
 #!/bin/bash
 
 chmod +x ./test/script/*
-MAKEFLAGS="--no-print-directory -s"
+mkdir -p ./test/output
+export MAKEFLAGS="--no-print-directory -s"
 
 test_yml()
 {
 	for file in ./test/yaml/*
 	do
-		echo "Testing [$(basename "${file}")]"
+		BASENAME=$(basename "${file}")
+		echo "Testing [${BASENAME}]"
 		echo "============================="
 		echo ""
-		make server FILE=$file
+		make server FILE=$file OUTPUT=./test/output/${BASENAME}
 		echo ""
 		echo exit | ./client/client.py >/dev/null
 		sleep 1
@@ -46,15 +48,15 @@ run_test "echo status"
 #start, stop, restart
 run_test "./test/script/start_stop_restart.sh" "./test/yaml/start_stop_restart.yml"
 
-##stoptime
-# run_test  "./test/script/stoptime.sh"
 
 ##exit
 run_test "echo exit"
 
-#startretries
-run_test "" "./test/yaml/startretries.yml"
-
 #signal
 gcc ./test/script/signal_program.c -o ./test/script/signal
 run_test "echo stop signal"  "./test/yaml/signal.yml"
+
+#stop time
+gcc ./test/script/stoptime.c -o ./test/script/stoptime
+run_test  "./test/script/stoptime.sh" "./test/yaml/stoptime.yml"
+
