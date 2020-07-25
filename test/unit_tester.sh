@@ -2,6 +2,7 @@
 
 chmod +x ./test/script/*
 mkdir -p ./test/output
+mkdir -p ./test/log
 export MAKEFLAGS="--no-print-directory -s"
 
 test_yml()
@@ -9,13 +10,13 @@ test_yml()
 	for file in ./test/yaml/*
 	do
 		BASENAME=$(basename "${file}")
-		log=${BASENAME%.yml}.log
+		log=./test/output/${BASENAME%.yml}.log
 		echo "Testing [${BASENAME}]"
 		echo "============================="
-		echo ""
-		make server FILE=$file OUTPUT=./test/output/${log}
-		echo ""
+		make server FILE=$file OUTPUT=${log} > ./test/log/${BASENAME%.yml}.log
 		echo exit | ./client/client.py >/dev/null
+		# echo "=============================" >> $log
+		# cat /tmp/log >> $log
 		sleep 1
 	done
 }
