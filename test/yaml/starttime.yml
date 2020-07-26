@@ -1,4 +1,5 @@
 programs:
     starttime:
-        cmd: echo starttime
+        cmd: echo startime
         starttime: 10
+        startretries: 2

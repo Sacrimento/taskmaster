@@ -1,5 +1,5 @@
 programs:
     signal:
         cmd: ./test/script/signal
-        stopsignal: KILL
+        stopsignal: INT
         autostart: true
