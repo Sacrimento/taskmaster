@@ -4,7 +4,7 @@ HOST = socket.gethostname()
 PORT = 4242
 
 def send(sock, msg):
-    sent = sock.send(msg.encode('utf-8'))
+    sock.send(msg.encode('utf-8'))
 
 def recv(sock):
     try:

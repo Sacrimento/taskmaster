@@ -1,0 +1,21 @@
+programs:
+    same name:
+        cmd: echo coucou
+        autostart: true
+        autorestart: unexpected
+
+    samename:
+        cmd: echo coucou
+        autostart: true
+        autorestart: unexpected
+    
+    same name:
+        cmd: echo coucou
+        autostart: true
+        autorestart: unexpected
+
+    multipleautorestart:
+        cmd: echo coucou
+        autostart: true
+        autorestart: unexpected
+        autorestart: unexpected

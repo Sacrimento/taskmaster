@@ -3,3 +3,7 @@ programs:
         cmd: echo startime
         starttime: 10
         startretries: 2
+    invalid starttime:
+        cmd: echo startime
+        starttime: -100
+        startretries: 2

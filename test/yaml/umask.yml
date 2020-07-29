@@ -2,3 +2,9 @@ programs:
     umask:
         cmd: id
         umask: 000
+    negative:
+        cmd: id
+        umask: -300
+    too much:
+        cmd: id
+        umask: 3000

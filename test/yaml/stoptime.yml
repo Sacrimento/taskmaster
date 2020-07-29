@@ -2,3 +2,7 @@ programs:
     stoptime:
         cmd: ./test/script/stoptime
         stoptime: 10
+    invlid stoptime:
+        cmd: ./test/script/stoptime
+        stoptime: -100
+
