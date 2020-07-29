@@ -148,10 +148,6 @@ class Taskmaster:
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
 
         with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
-            if current_state.get('stdout', '') == "-":
-                stdout = subprocess.DEVNULL
-            if current_state.get('stderr', '') == "-":
-                stdout = subprocess.DEVNULL
             process = subprocess.Popen(shlex.split(current_state['cmd']),
                     stdout=stdout,
                     stderr=stderr,
