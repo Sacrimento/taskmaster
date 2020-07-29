@@ -2,3 +2,7 @@ programs:
     stdout:
         cmd: echo bad stdout
         stdout: /
+
+    stdout:
+        cmd: echo bad stdout
+        stdout: "-"

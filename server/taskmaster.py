@@ -136,48 +136,51 @@ class Taskmaster:
 
     def initchildproc(self, name):
         os.setpgrp()
-        os.umask(int(self._conf[name].get('umask', 777)))
+        umask = int(self._conf[name].get('umask', 777))
+        if umask < 0 or umask > 777:
+            raise ValueError
+
+        os.umask(umask)
         os.chdir(self._conf[name].get('workingdir', os.getcwd()))
 
     def _start(self, name, status):
         current_state = self._conf[name]
-
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
 
-        if status.get('status', '') in ('started', 'running'):
-            return
-            # return '%s is already running' % name
-        try:
-            with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
-                process = subprocess.Popen(shlex.split(current_state['cmd']),
-                        stdout=stdout,
-                        stderr=stderr,
-                        env=env,
-                        preexec_fn=lambda : self.initchildproc(name))
-        except IOError as e:
-            print(e)
-            exit("un petit log au moins") # TODO: exit properly
+        with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
+            if current_state.get('stdout', '') == "-":
+                stdout = subprocess.DEVNULL
+            if current_state.get('stderr', '') == "-":
+                stdout = subprocess.DEVNULL
+            process = subprocess.Popen(shlex.split(current_state['cmd']),
+                    stdout=stdout,
+                    stderr=stderr,
+                    env=env,
+                    preexec_fn=lambda : self.initchildproc(name))
 
-        new_proc = {
+        self.logger.info('%s started !', name)
+        return {
                 'retries': status.get('retries', 0),
                 'process': process,
                 'start_date': datetime.now(),
                 'status': 'started'
                 }
 
-        self.logger.info('%s started !', name)
-        return new_proc
-
     def start(self, name):
-        self.logger.debug('Starting %s', name) 
-
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
 
         status = self._processes.get(name, [])
+
         for i in range(self._conf[name].get('numprocs', 1)):
+            if len(status) > i and status[i].get('status', '') in ('started', 'running'):
+                    continue
             elem = status[i] if len(status) > i else {}
-            status.insert(i, self._start(name, elem))
+            try:
+                status.insert(i, self._start(name, elem))
+            except (IOError, subprocess.SubprocessError): # bad stderr stdout or umask
+                self.logger.info('Invalid Value for uname in: %s', name)
+
         self._processes[name] = status
         return '%s successfully started' % name
 
@@ -192,7 +195,6 @@ class Taskmaster:
         return status
 
     def stop(self, name):
-        self.logger.debug('Stopping %s', name)
 
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name

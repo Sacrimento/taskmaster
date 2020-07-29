@@ -19,17 +19,15 @@ test_print()
 
 test_yml()
 {
-	for file in ./test/yaml/*
-	do
-		BASENAME=$(basename "${file}")
-		server_log=./test/output/${BASENAME%.yml}.log
-		log=./test/log/${BASENAME%.yml}.log
-		echo "Testing [${BASENAME}]"
-		echo "============================="
-		make server FILE=$file OUTPUT=${server_log} > ${log}
-		sleep 1
-		echo exit | ./client/client.py >/dev/null
-	done
+	file="./test/yaml/$1"
+	BASENAME=$1
+	server_log=./test/output/${BASENAME%.yml}.log
+	log=./test/log/${BASENAME%.yml}.log
+	echo "Testing [${BASENAME}]"
+	echo "============================="
+	make server FILE=$file OUTPUT=${server_log}
+	sleep 1
+	echo exit | ./client/client.py >/dev/null
 }
 
 test_tcp()
@@ -54,10 +52,19 @@ run_test()
 	echo exit  | ./client/client.py >/dev/null
 }
 
+if [ -z "$TEST" ]
+then	
+	for file in ./test/yaml/*
+	do
+		test_yml $(basename "${file}")
+	done
+else
+	test_yml "${TEST}.yml"
+	exit
+fi
+
 gcc ./test/script/signal_program.c -o ./test/script/signal
 gcc ./test/script/stoptime.c -o ./test/script/stoptime
-
-test_yml
 # test_tcp
 
 run_test "echo status" "status" ""

@@ -2,3 +2,7 @@ programs:
     stderr:
         cmd: echo bad stderr
         stderr: /
+
+    close stderr:
+        cmd: echo bad stderr
+        stderr: "-"
