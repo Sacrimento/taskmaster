@@ -6,6 +6,8 @@ mkdir -p ./test/log
 rm -f ./test/output/*
 rm -f ./test/log/*
 export MAKEFLAGS="--no-print-directory -s"
+trap "exit 1" TERM
+export TOP_PID=$$
 
 RED="\e[91m"
 GREEN="\e[92m"
@@ -25,9 +27,27 @@ test_yml()
 	log=./test/log/${BASENAME%.yml}.log
 	echo "Testing [${BASENAME}]"
 	echo "============================="
-	make server FILE=$file OUTPUT=${server_log}
+	if [ -z "$VERBOSE" ]; then
+		make server FILE=$file OUTPUT=${server_log} > ${log}
+	else
+		make server FILE=$file OUTPUT=${server_log}
+	fi
 	sleep 1
 	echo exit | ./client/client.py >/dev/null
+}
+
+function test_all_yml()
+{
+	if [ -z "$TEST" ]
+	then	
+		for file in ./test/yaml/*
+		do
+			test_yml $(basename "${file}")
+		done
+	else
+		test_yml "${TEST}.yml"
+		exit
+	fi
 }
 
 test_tcp()
@@ -44,7 +64,11 @@ run_test()
 	echo "============================="
 	server_log=./test/output/manual_test_$2.log
 	log=./test/log/manual_test_$2.log
-	make server FILE=$3 OUTPUT=${server_log} > ${log}
+	if [ -z "$VERBOSE" ]; then
+		make server FILE=$3 OUTPUT=${server_log} > ${log}
+	else
+		make server FILE=$3 OUTPUT=${server_log}
+	fi
 	sleep 1
 	printf "client\n" >> ${log}
 	printf "=============================\n" >> ${log}
@@ -52,21 +76,12 @@ run_test()
 	echo exit  | ./client/client.py >/dev/null
 }
 
-if [ -z "$TEST" ]
-then	
-	for file in ./test/yaml/*
-	do
-		test_yml $(basename "${file}")
-	done
-else
-	test_yml "${TEST}.yml"
-	exit
-fi
 
 gcc ./test/script/signal_program.c -o ./test/script/signal
 gcc ./test/script/stoptime.c -o ./test/script/stoptime
 # test_tcp
 
+test_all_yml 
 run_test "echo status" "status" ""
 
 run_test "./test/script/start_stop_restart.sh" "start_stop_restart" "./test/yaml/start_stop_restart.yml"

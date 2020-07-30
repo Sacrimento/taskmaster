@@ -4,5 +4,9 @@ programs:
         stderr: /
 
     close stderr:
-        cmd: echo bad stderr
+        cmd: mkdir / # must not be print since its in stderr
+        stderr: "-"
+
+    close stderr proof:
+        cmd: echo its not stderr, it will be printed
         stderr: "-"

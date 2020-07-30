@@ -143,11 +143,16 @@ class Taskmaster:
         os.umask(umask)
         os.chdir(self._conf[name].get('workingdir', os.getcwd()))
 
+    def _get_io(self, io_name, current_state):
+        if io_name == "-":
+            return subprocess.DEVNULL
+        return open(current_state.get(io_name, '/dev/' + io_name), 'w')
+
     def _start(self, name, status):
         current_state = self._conf[name]
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
 
-        with open(current_state.get('stdout', '/dev/stdout'), 'w') as stdout, open(current_state.get('stderr', '/dev/stderr'), 'w') as stderr:
+        with self._get_io("stdout", current_state) as stdout, self._get_io("stderr", current_state) as stderr:
             process = subprocess.Popen(shlex.split(current_state['cmd']),
                     stdout=stdout,
                     stderr=stderr,
@@ -181,11 +186,7 @@ class Taskmaster:
         return '%s successfully started' % name
 
     def kill(self, name, status, signal):
-        try:
-            os.kill(status['process'].pid, signal)
-        except OSError:
-            self.logger.warning('Process %s already exited', name)
-            return 'process %s already exited' % name
+        os.kill(status['process'].pid, signal)
         status['stop_time']   = datetime.now()
         status['status']      = 'stopped'
         return status
@@ -197,7 +198,11 @@ class Taskmaster:
 
         sign = getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM'))
         for i, proc in enumerate(self._processes[name]):
-            self._processes[name][i] = self.kill(name, proc, sign)
+            try:
+                self._processes[name][i] = self.kill(name, proc, sign)
+            except OSError:
+                self.logger.warning('Process %s already exited', name)
+                return 'process %s already exited' % name
 
         self.logger.info('%s stopped !', name)
         return '%s successfully stopped' % name
@@ -212,7 +217,6 @@ class Taskmaster:
             out += '\n%s:\n' % proc_name
             for proc in status:
                 out += '  status: %s' % proc['status'] 
-                print(proc)
                 if proc['status'] in ('exited', 'stopped'):
                     out += ' (%d)' % proc['process'].returncode
                 else:
