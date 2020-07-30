@@ -69,11 +69,25 @@ class Conf:
                         break
         return r
 
+    def check_negative_value(self, programs, errors):
+        dic = ["starttime", "stoptime", "startretries"]
+
+        umask = programs.get("umask", 1)
+        numprocs = programs.get("numprocs", 1)
+        if numprocs <= 0:
+                errors.append('Invalid value for: numprocs')
+        if umask < 0 or umask > 777:
+                errors.append('Invalid value for: umask')
+        for index in dic:
+            if programs.get(index, 1) < 0:
+                errors.append('Negative value for: ' + index)
+
     ## TODO check every *needed* option (such as 'cmd')
     def _check_data(self, new):
         errors = []
         if not 'programs' in new:
             errors.append('"programs" root key missing')
+        [self.check_negative_value(v, errors) for k, v in new['programs'].items()]
         if errors:
             raise MissingData('\n'.join(errors))
 

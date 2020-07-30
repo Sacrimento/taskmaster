@@ -1,0 +1,51 @@
+programs:
+    same name:
+        cmd: echo coucou
+        autostart: true
+        autorestart: unexpected
+    samename:
+        cmd: echo coucou
+        autostart: true
+        autorestart: unexpected
+
+    same name:
+        cmd: echo coucou
+        autostart: true
+        autorestart: unexpected
+
+    multipleautorestart:
+        cmd: echo coucou
+        autostart: true
+        autorestart: unexpected
+        autorestart: unexpected
+
+    invalid numprocs:
+        cmd: echo MULTIPROC
+        numprocs: -100
+        startretries: 4
+
+    no numprocs:
+        cmd: echo MULTIPROC
+        numprocs: 0
+        startretries: 4
+
+    invalid startretries:
+        cmd: echo start retry; (exit 1)
+        startretries: -100
+
+    invalid starttime:
+        cmd: echo startime
+        starttime: -100
+        startretries: 2
+
+    invalid stoptime:
+        cmd: ./test/script/stoptime
+        stoptime: -100
+
+    negative umask:
+        cmd: id
+        umask: -300
+
+    too much umask:
+        cmd: id
+        umask: 3000

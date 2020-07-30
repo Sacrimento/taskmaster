@@ -137,8 +137,6 @@ class Taskmaster:
     def initchildproc(self, name):
         os.setpgrp()
         umask = int(self._conf[name].get('umask', 777))
-        if umask < 0 or umask > 777:
-            raise ValueError
 
         os.umask(umask)
         os.chdir(self._conf[name].get('workingdir', os.getcwd()))
@@ -193,7 +191,6 @@ class Taskmaster:
         return status
 
     def stop(self, name):
-
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
 
