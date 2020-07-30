@@ -144,9 +144,10 @@ class Taskmaster:
         os.chdir(self._conf[name].get('workingdir', os.getcwd()))
 
     def _get_io(self, io_name, current_state):
-        if io_name == "-":
-            return subprocess.DEVNULL
-        return open(current_state.get(io_name, '/dev/' + io_name), 'w')
+        selected_io = current_state.get(io_name, '/dev/' + io_name)
+        if selected_io == "-":
+            return open("/dev/null", 'w')
+        return open(selected_io, 'w')
 
     def _start(self, name, status):
         current_state = self._conf[name]
