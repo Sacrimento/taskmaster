@@ -12,7 +12,7 @@ server:
 	@echo starting server...
 	@killall -q python3 || true
 	@rm -f $(DEFAULT_LOCK_FILE)
-	@./server/server.py -o $(if $(OUTPUT),$(OUTPUT),$(DEFAULT_OUTPUT_FILE)) -f $(if $(FILE),$(FILE),$(DEFAULT_CONF_FILE)) &
+	@./server/server.py  -o $(if $(OUTPUT),$(OUTPUT),$(DEFAULT_OUTPUT_FILE)) -f $(if $(FILE),$(FILE),$(DEFAULT_CONF_FILE)) &
 
 client:
 	@echo starting client...

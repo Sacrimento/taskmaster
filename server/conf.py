@@ -1,8 +1,12 @@
 import hashlib
 import yaml
+import os
 
 def catch_conf_except(func):
     def wrapper(_self):
+        if not os.path.isfile(_self.path):
+            print('[Taskmaster] %s: file does not exist' % _self.path)
+            exit(1)
         try:
             r = func(_self)
         except IOError as exc:
@@ -55,10 +59,12 @@ class Conf:
 
     def _conf_diff(self, new):
         old = self._dict.get('programs', {})
-        r = {'start': [], 'stop': []}
+        r = {'start': [], 'stop': [], '_del': []}
         key_changes = set(old) ^ set(new)
         for key in key_changes:
             r['start' if key in new else 'stop'].append(key)
+            if key not in new:
+                r['_del'].append(key)
 
         for prog, prog_attr in new.items():
             if prog not in key_changes:
@@ -99,3 +105,11 @@ class Conf:
 
     def __getitem__(self, item):
         return self._dict['programs'][item]
+
+    def __delitem__(self, item):
+        del self._dict[item]
+
+    def get(self, item, default=None):
+        if item in self:
+            return self[item]
+        return default

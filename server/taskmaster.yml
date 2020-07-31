@@ -1,5 +1,5 @@
 programs:
-    nginx:
+    ginx:
         cmd: cat /dev/random
         numprocs: 1
         umask: 022
