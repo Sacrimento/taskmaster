@@ -1,4 +1,5 @@
 import hashlib
+import signal
 import yaml
 import os
 
@@ -80,6 +81,10 @@ class Conf:
 
         umask = programs.get("umask", 1)
         numprocs = programs.get("numprocs", 1)
+        try:
+            getattr(signal, 'SIG' + programs.get('stopsignal', 'TERM').upper())
+        except AttributeError:
+            errors.append('Invalid value for: signal')
         if numprocs <= 0:
                 errors.append('Invalid value for: numprocs')
         if umask < 0 or umask > 777:

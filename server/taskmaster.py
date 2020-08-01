@@ -185,14 +185,12 @@ class Taskmaster:
     def start(self, name):
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
-
-        if name in self._processes and self._processes[name]['status'] in ('started', 'running'):
-            return '%s: process alreay running' % name
-
+        ret = ""
         status = self._processes.get(name, [])
 
         for i in range(self._conf[name].get('numprocs', 1)):
             if len(status) > i and status[i].get('status', '') in ('started', 'running'):
+                ret += '%s numproc[%d]: process alreay running' % (name, i)
                 continue
             elem = status[i] if len(status) > i else {}
             try:
@@ -201,7 +199,7 @@ class Taskmaster:
                 self.logger.info('Invalid Value for uname in: %s', name)
 
         self._processes[name] = status
-        return '%s successfully started' % name
+        return ret + '%s successfully started' % name
 
     def kill(self, status, signal):
         os.kill(status['process'].pid, signal)
@@ -212,21 +210,22 @@ class Taskmaster:
     def stop(self, name):
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
+        if name not in self._processes:
+            return '%s already stopped' % name
 
-        if name in self._processes and self._processes[name]['status'] in ('stopped', 'exited'):
-            return '%s: process alreay stopped' % name
-
-        # TODO what if the signal does not exist ? (getattr can take a default)
-        sign = getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM').upper())
+        ret = ""
+        sign = getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM').upper(), "SIGTERM")
         for i, proc in enumerate(self._processes[name]):
+            if proc.get('status', '') in ('started', 'running'):
+                ret += '%s numproc[%d]: process alreay stopped' % (name, i)
             try:
                 self._processes[name][i] = self.kill(proc, sign)
             except OSError:
                 self.logger.warning('Process %s already exited', name)
-                return 'process %s already exited' % name
+                return ret + 'process %s already exited' % name
 
         self.logger.info('%s stopped !', name)
-        return '%s successfully stopped' % name
+        return ret + '%s successfully stopped' % name
 
     def restart(self, name):
         self.stop(name)

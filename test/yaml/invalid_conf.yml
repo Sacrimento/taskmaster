@@ -29,6 +29,11 @@ programs:
         numprocs: 0
         startretries: 4
 
+    invalid signal:
+        cmd: echo MULTIPROC
+        stopsignal: PRANKED
+        startretries: 4
+
     invalid startretries:
         cmd: echo start retry; (exit 1)
         startretries: -100
