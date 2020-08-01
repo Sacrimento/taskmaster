@@ -78,14 +78,15 @@ class Conf:
 
     def check_negative_value(self, programs, errors):
         dic = ["starttime", "stoptime", "startretries"]
-
         umask = programs.get("umask", 1)
-        numprocs = programs.get("numprocs", 1)
+
         try:
             getattr(signal, 'SIG' + programs.get('stopsignal', 'TERM').upper())
         except AttributeError:
             errors.append('Invalid value for: signal')
-        if numprocs <= 0:
+        if programs.get("startretries", 0) > 0 and programs.get("autorestart", None) is None:
+           errors.append('autorestart needed when startretries is given')
+        if programs.get("numprocs", 1) <= 0:
                 errors.append('Invalid value for: numprocs')
         if umask < 0 or umask > 777:
                 errors.append('Invalid value for: umask')
@@ -99,6 +100,7 @@ class Conf:
         if not 'programs' in new:
             errors.append('"programs" root key missing')
         [self.check_negative_value(v, errors) for k, v in new['programs'].items()]
+
         if errors:
             raise MissingData('\n'.join(errors))
 

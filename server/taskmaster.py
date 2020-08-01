@@ -12,12 +12,12 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from tm_socket import send, recv, HOST, PORT
+from tm_socket import send, recv, HOST
 
 class Taskmaster:
     _processes = {}
 
-    def __init__(self, conf, autoreload, outfile, lock_file):
+    def __init__(self, conf, autoreload, outfile, lock_file, port):
         self.lock_file = lock_file
         self.logger = logging.getLogger('[Taskmaster]')
 
@@ -40,7 +40,7 @@ class Taskmaster:
         self._conf.logger = self.logger
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.bind((HOST, PORT))
+        self.socket.bind((HOST, port))
         self.socket.listen(1)
         self.conn = None
 
@@ -98,8 +98,9 @@ class Taskmaster:
         return 'config file updated'
 
     def check_start_retry(self, name, status, conf):
-        if status['retries'] > conf.get('startretries', 128):
+        if status['retries'] >= conf.get('startretries', 128):
             return status
+        self.logger.info('Restarting %s', name)
         if conf.get('autorestart', '') == 'never':
             return status
         status['retries'] += 1
@@ -195,8 +196,9 @@ class Taskmaster:
             elem = status[i] if len(status) > i else {}
             try:
                 status.insert(i, self._start(name, elem))
-            except (IOError, subprocess.SubprocessError): # bad stderr stdout or umask
-                self.logger.info('Invalid Value for uname in: %s', name)
+            except (IOError, subprocess.SubprocessError) as e: # bad stderr stdout or umask
+                self.logger.info(e)
+                self.logger.info('Command was not executed by shell for: %s', name)
 
         self._processes[name] = status
         return ret + '%s successfully started' % name
@@ -216,12 +218,12 @@ class Taskmaster:
         ret = ""
         sign = getattr(signal, 'SIG' + self._conf[name].get('stopsignal', 'TERM').upper(), "SIGTERM")
         for i, proc in enumerate(self._processes[name]):
-            if proc.get('status', '') in ('started', 'running'):
+            if proc.get('status', '') in ('exited', 'stopped'):
                 ret += '%s numproc[%d]: process alreay stopped' % (name, i)
             try:
                 self._processes[name][i] = self.kill(proc, sign)
             except OSError:
-                self.logger.warning('Process %s already exited', name)
+                self.logger.warning('Process %s already exited', name) # TODO: it crash for some obscur Reason
                 return ret + 'process %s already exited' % name
 
         self.logger.info('%s stopped !', name)
@@ -237,10 +239,10 @@ class Taskmaster:
             out += '\n%s (%s):\n' % (proc_name, self._conf[proc_name]['cmd'])
             for proc in status:
                 out += '  status: %s' % proc['status']
-                if proc['status'] in ('exited', 'stopped'):
-                    out += ' (%d)' % proc['process'].returncode
-                else:
+                if proc['status'] in ('started', 'running'):
                     out += '\n  started at: %s' % proc['start_date'].strftime('%d/%m/%Y, %H:%M:%S')
+                elif proc['process'].returncode:
+                    out += ' (%d)' % proc['process'].returncode
         return out
 
     def _handle_bad_name(self, name):

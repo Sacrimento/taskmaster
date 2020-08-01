@@ -12,11 +12,11 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from tm_socket import send, recv, HOST, PORT
+from tm_socket import send, recv, HOST
 
 class Repl:
 
-    def __init__(self, lock_file, tm=None):
+    def __init__(self, lock_file, port, tm=None):
         self._tm = tm
         self.lock_file=lock_file
         self._CMDS = {
@@ -34,7 +34,7 @@ class Repl:
             exit(1)
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((HOST, PORT))
+        self.socket.connect((HOST, port))
 
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self._completer)

@@ -8,6 +8,7 @@ rm -f ./test/log/*
 export MAKEFLAGS="--no-print-directory -s"
 trap "exit 1" TERM
 export TOP_PID=$$
+export DEFAULT_PORT=4242
 
 RED="\e[91m"
 GREEN="\e[92m"
@@ -27,23 +28,34 @@ test_yml()
 	log=./test/log/${BASENAME%.yml}.log
 	echo "Testing [${BASENAME}]"
 	echo "============================="
-	if [ -z "$VERBOSE" ]; then
-		make server FILE=$file OUTPUT=${server_log} > ${log}
-	else
-		make server FILE=$file OUTPUT=${server_log}
-	fi
+	export DEFAULT_PORT=$((DEFAULT_PORT+1))
+	export cmd="make server PORT=$DEFAULT_PORT FILE=$file OUTPUT=${server_log}"
+	if [ -z "$VERBOSE" ]; then ($cmd > ${log});	else ($cmd); fi
 	sleep 1
-	echo exit | ./client/client.py >/dev/null
+	echo exit | ./client/client.py -p $DEFAULT_PORT >/dev/null
+}
+
+exit_all_yml()
+{
+	sleep 12
+	for file in ./test/yaml/*
+	do
+		echo $tmp
+		tmp=$((tmp+1))
+		echo exit | ./client/client.py -p $tmp >/dev/null
+	done
 }
 
 function test_all_yml()
 {
+	tmp=4242
 	if [ -z "$TEST" ]
 	then	
 		for file in ./test/yaml/*
 		do
 			test_yml $(basename "${file}")
 		done
+		sleep 1
 	else
 		test_yml "${TEST}.yml"
 		exit
@@ -53,9 +65,25 @@ function test_all_yml()
 test_tcp()
 {
 	make server >/dev/null
-	sleep 1
 	echo status | make client &
 	echo status | make client    >/dev/null
+}
+
+run_test_2()
+{
+	echo "Testing [${2}]"
+	echo "============================="
+	server_log=./test/output/manual_test_$2.log
+	log=./test/log/manual_test_$2.log
+	export DEFAULT_PORT=$((DEFAULT_PORT+1))
+
+	export cmd="make server PORT=$DEFAULT_PORT FILE=$3 OUTPUT=${server_log}"
+	if [ -z "$VERBOSE" ]; then ($cmd > ${log});	else ($cmd); fi
+
+	sleep 1
+	printf "client\n" >> ${log}
+	printf "=============================\n" >> ${log}
+	($1) | ./client/client.py -p $DEFAULT_PORT >> ${log}
 }
 
 run_test()
@@ -64,16 +92,16 @@ run_test()
 	echo "============================="
 	server_log=./test/output/manual_test_$2.log
 	log=./test/log/manual_test_$2.log
-	if [ -z "$VERBOSE" ]; then
-		make server FILE=$3 OUTPUT=${server_log} > ${log}
-	else
-		make server FILE=$3 OUTPUT=${server_log}
-	fi
+	export DEFAULT_PORT=$((DEFAULT_PORT+1))
+
+	export cmd="make server PORT=$DEFAULT_PORT FILE=$3 OUTPUT=${server_log}"
+	if [ -z "$VERBOSE" ]; then ($cmd > ${log});	else ($cmd); fi
+
 	sleep 1
 	printf "client\n" >> ${log}
 	printf "=============================\n" >> ${log}
-	($1) | ./client/client.py >> ${log}
-	echo exit  | ./client/client.py >/dev/null
+	($1) | ./client/client.py -p $DEFAULT_PORT >> ${log}
+	echo exit | ./client/client.py -p $DEFAULT_PORT >/dev/null
 }
 
 
@@ -81,7 +109,7 @@ gcc ./test/script/signal_program.c -o ./test/script/signal
 gcc ./test/script/stoptime.c -o ./test/script/stoptime
 # test_tcp
 
-test_all_yml 
+test_all_yml
 run_test "echo status" "status" ""
 
 run_test "./test/script/start_stop_restart.sh" "start_stop_restart" "./test/yaml/start_stop_restart.yml"
@@ -98,3 +126,4 @@ run_test  "./test/script/reload_conf.sh" "reload_conf" "/tmp/reload_conf.yml"
 
 run_test  "./test/script/stoptime.sh" "stoptime" "./test/yaml/stoptime.yml" &
 
+# exit_all_yml
