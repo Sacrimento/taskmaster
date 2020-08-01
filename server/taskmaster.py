@@ -118,8 +118,8 @@ class Taskmaster:
 
     def check_processes(self):
         now = datetime.now()
-
-        for proc_name, stat in self._processes.items():
+        processes_copy = {**self._processes}
+        for proc_name, stat in processes_copy.items():
             for i, status in enumerate(stat):
                 conf = self._conf.get(proc_name, None)
                 if not conf:
