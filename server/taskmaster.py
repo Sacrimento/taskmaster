@@ -63,6 +63,14 @@ class Taskmaster:
             self.socket.close()
         if hasattr(self, 'conn') and self.conn:
             self.conn.close()
+        processes_copy = {**self._processes}
+        for proc_name, stat in processes_copy.items():
+            for i, status in enumerate(stat):
+                try:
+                    print(status['process'].pid)
+                    os.kill(status['process'].pid, signal.SIGKILL)
+                except:
+                    continue
         self.logger.info('taskmaster daemon stopped')
 
     def listen(self):
@@ -75,11 +83,15 @@ class Taskmaster:
             exit(1)
             return
 
+        if len(s) > 0 and s[0] == 'exit':
+            send(self.conn, 'exit done')
+            self.__del__()
+            return
+
         ret = getattr(self, s[0])(' '.join(s[1:]) if len(s) > 1 else [None])
         send(self.conn, ret)
 
     def update_tasks(self, changes, first=False):
-        print(changes)
         for todo in ('stop', '_del', 'start'):
             for task in changes[todo]:
                 if todo != 'start' or (first and self._conf[task].get('autostart', True)):
@@ -145,6 +157,7 @@ class Taskmaster:
                     if (conf.get('autorestart', '') == 'always'
                         and status['status'] in ('exited', 'stopped')):
                         status = self.check_start_retry(proc_name, status, conf)
+                    self._processes[proc_name][i] = status
 
     def has_conf_changed(self):
         return self._conf.has_changed()

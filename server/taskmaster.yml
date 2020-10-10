@@ -1,6 +1,6 @@
 programs:
     ginx:
-        cmd: cat /dev/random
+        cmd: ./test/script/stoptime
         numprocs: 1
         umask: 022
         autostart: true
