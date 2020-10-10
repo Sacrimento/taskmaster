@@ -26,7 +26,8 @@ class Repl:
             'reread' : (lambda i: self._send('update_conf'), 'update configuration file'),
             'status' : (self._send, 'display status for each program'),
             'help' : (self._help, 'display help'),
-            'exit' : (lambda i: [os.kill(info.get_tm_pid(self.lock_file), signal.SIGKILL), exit(0)], 'exit taskmaster'),
+            'exit' : (lambda i: [exit(0)], 'exit taskmaster'),
+            # 'exit' : (lambda i: [self.socket.close(), os.kill(info.get_tm_pid(self.lock_file), signal.SIGKILL), exit(0)], 'exit taskmaster'),
         }
 
         if not info.is_tm_running(self.lock_file):
@@ -38,7 +39,7 @@ class Repl:
 
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self._completer)
-        signal.signal(signal.SIGHUP, lambda _, __: os.kill(info.get_tm_pid(self.lock_file), signal.SIGKILL))
+        signal.signal(signal.SIGHUP, lambda _, __: os.kill(info.get_tm_pid(self.lock_file), signal.SIGHUP))
         signal.signal(signal.SIGINT, lambda _, __: (print(), exit(0))) # Maybe a bad idea
 
     def __del__(self):
