@@ -67,7 +67,6 @@ class Taskmaster:
         for proc_name, stat in processes_copy.items():
             for i, status in enumerate(stat):
                 try:
-                    print(status['process'].pid)
                     os.kill(status['process'].pid, signal.SIGKILL)
                 except:
                     continue
@@ -112,7 +111,7 @@ class Taskmaster:
     def check_start_retry(self, name, status, conf):
         if status['retries'] >= conf.get('startretries', 128):
             return status
-        self.logger.info('Restarting %s', name)
+        self.logger.info('Restarting %s (%s)', name, status['retries'])
         if conf.get('autorestart', '') == 'never':
             return status
         status['retries'] += 1
@@ -138,14 +137,15 @@ class Taskmaster:
                 if not conf:
                     continue
                 running = status['process'].poll() is None
-                if (status['status'] == 'stopped'
-                     and status['stop_time'] - now > timedelta(0, conf.get('stop_time', 0))
-                     and running):
-                        status = self.kill(status, signal.SIGKILL)
+                if (status['status'] == 'stopped' and running):
+                    if (now - status['stoptime'] > timedelta(0, conf.get('stoptime', 0))):
+                       status = self.kill(status, signal.SIGKILL)
 
-                if running:
-                    if timedelta(0, conf.get('starttime', 0)) + status['start_date'] < now: # process is running properly
-                        status['status'] = 'running'
+                if (conf.get('starttime', 0) > 0
+                     and status['status'] in ('started', 'running') and not running):
+                    if (now - status['start_date']) < timedelta(0, conf.get('starttime', 0)):
+                        status = self.check_start_retry(proc_name, status, conf)
+                        continue
                 else:
                     if status['status'] not in ('exited', 'stopped'):
                         self.logger.info('%s exited !', proc_name)
@@ -155,9 +155,10 @@ class Taskmaster:
                         and status['process'].returncode not in conf.get('exitcodes', [])):
                         status = self.check_start_retry(proc_name, status, conf)
                     if (conf.get('autorestart', '') == 'always'
-                        and status['status'] in ('exited', 'stopped')):
+                        and status['status'] in ('exited')):
                         status = self.check_start_retry(proc_name, status, conf)
-                    self._processes[proc_name][i] = status
+
+                self._processes[proc_name][i] = status
 
     def has_conf_changed(self):
         return self._conf.has_changed()
@@ -218,7 +219,7 @@ class Taskmaster:
 
     def kill(self, status, signal):
         os.kill(status['process'].pid, signal)
-        status['stop_time'] = datetime.now()
+        status['stoptime'] = datetime.now()
         status['status'] = 'stopped'
         return status
 

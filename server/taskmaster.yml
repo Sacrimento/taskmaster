@@ -7,11 +7,23 @@ programs:
         autorestart: unexpected
         exitcodes:
             - 0
+        stopsignal: int
+        stoptime: 10
+        env:
+            started_by: taskmaster
+            answer: 44
+
+    starttime:
+        cmd: python3 ./test/script/starttime.py
+        numprocs: 1
+        umask: 022
+        autostart: true
+        autorestart: unexpected
+        exitcodes:
+            - 0
         startretries: 4
-        starttime: 5
-        stopsignal: term
-        stdout: /dev/null
-        stderr: /dev/null
+        starttime: 10
+        stopsignal: int
         stoptime: 10
         env:
             started_by: taskmaster
