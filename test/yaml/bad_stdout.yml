@@ -6,6 +6,7 @@ programs:
     stdout:
         cmd: echo Must not be print since its echo
         stdout: "-"
+
     stdout:
         cmd: mkdir / # must be print since its stderr
         stdout: "-"

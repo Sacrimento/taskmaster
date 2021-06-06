@@ -1,4 +1,8 @@
 programs:
-    autostart:
-        cmd: echo AUTOSTART
+    bad_autostart:
+        cmd: echo autostart does not works
         autostart: false
+
+    autostart:
+        cmd: echo autostart works
+        autostart: true

@@ -24,13 +24,14 @@ test_yml()
 {
 	file="./test/yaml/$1"
 	BASENAME=$1
-	server_log=./test/output/${BASENAME%.yml}.log
-	log=./test/log/${BASENAME%.yml}.log
+	server_log="./test/output/${BASENAME%.yml}.log"
+	log="./test/log/${BASENAME%.yml}.log"
 	echo "Testing [${BASENAME}]"
 	echo "============================="
 	export DEFAULT_PORT=$((DEFAULT_PORT+1))
 	export cmd="make server PORT=$DEFAULT_PORT FILE=$file OUTPUT=${server_log}"
 	if [ -z "$VERBOSE" ]; then ($cmd > ${log});	else ($cmd); fi
+	# test_print $? ${BASENAME}
 	sleep 1
 	echo exit | ./client/client.py -p $DEFAULT_PORT >/dev/null
 }

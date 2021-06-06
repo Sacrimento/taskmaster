@@ -1,15 +1,16 @@
 programs:
     unexpected:
-        cmd: echo coucou
+        cmd: echo unexpected
         autostart: true
         autorestart: unexpected
+        startretries: 10
 
     always:
-        cmd: echo coucou
+        cmd: echo always
         autostart: true
         autorestart: always
 
     never:
-        cmd: echo coucou
+        cmd: echo never
         autostart: true
         autorestart: never

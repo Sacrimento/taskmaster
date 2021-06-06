@@ -2,7 +2,6 @@ programs:
 
     start:
         cmd: echo start
-        stdout: /
 
     stop:
         cmd: cat /dev/random

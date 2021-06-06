@@ -2,3 +2,4 @@ programs:
     startretries:
         cmd: echo start retry; (exit 1)
         startretries: 4
+        autostart: always

@@ -9,9 +9,6 @@ programs:
             - 0
         stopsignal: int
         stoptime: 10
-        env:
-            started_by: taskmaster
-            answer: 44
 
     starttime:
         cmd: python3 ./test/script/starttime.py
@@ -25,9 +22,6 @@ programs:
         starttime: 10
         stopsignal: int
         stoptime: 10
-        env:
-            started_by: taskmaster
-            answer: 44
 
     t t:
         cmd: echo coucou

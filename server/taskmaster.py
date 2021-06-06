@@ -29,14 +29,16 @@ class Taskmaster:
             exit(1)
 
         self._conf = conf
+        self.current_conf = {}
+        self.current_status = {}
         self.autoreload = autoreload
 
         logging.basicConfig(
-            filename=outfile,
-            format='%(name)s %(asctime)s - %(levelname)s: %(message)s',
-            datefmt='%d/%m/%Y %H:%M:%S',
-            level=logging.DEBUG,  # TODO change this to info
-        )
+                filename=outfile,
+                format='%(name)s %(asctime)s - %(levelname)s: %(message)s',
+                datefmt='%d/%m/%Y %H:%M:%S',
+                level=logging.DEBUG,  # TODO change this to info
+                )
         self._conf.logger = self.logger
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -52,7 +54,7 @@ class Taskmaster:
 
     def run(self):
         while True:
-            if self.autoreload and self.has_conf_changed():
+            if self.autoreload and self._conf.has_changed():
                 self.update_conf()
             self.check_processes()
 
@@ -111,9 +113,9 @@ class Taskmaster:
     def check_start_retry(self, name, status, conf):
         if status['retries'] >= conf.get('startretries', 128):
             return status
-        self.logger.info('Restarting %s (%s)', name, status['retries'])
         if conf.get('autorestart', '') == 'never':
             return status
+        self.logger.info('Restarting %s (%s)', name, status['retries'])
         status['retries'] += 1
         return self._start(name, status)
 
@@ -122,46 +124,78 @@ class Taskmaster:
             self.logger.warning('%s: unknown process name', name)
             return
 
+        for elem in self._processes[name]:
+            print(elem)
+        exit(1)
         for i in range(len(self._processes[name])):
             if self._processes[name][i]['status'] in ('started', 'running'):
                 self.kill(self._processes[name][i], signal.SIGKILL)
 
         del self._processes[name]
 
-    def check_processes(self):
+    def is_process_allowed_to_run(self, current_status, running):
+        return current_status == 'stopped' and running
+
+    def is_stop_time(self, stoptime):
         now = datetime.now()
+        conf_stop_time = self.current_conf.get('stoptime', 0)
+        return (now - stoptime) > timedelta(0, conf_stop_time)
+
+    def is_start_time(self, start_date):
+        now = datetime.now()
+        conf_start_time = self.current_conf.get('stoptime', 0)
+        return (now - start_date) < timedelta(0, conf_start_time)
+
+    def process_should_not_run(self, running):
+        current_status = self.current_status['status']
+        stoptime = self.current_status.get('stoptime', 0)
+        return self.is_process_allowed_to_run(current_status, running) and self.is_stop_time(stoptime)
+
+    def process_is_running(self, status):
+        return status in ('started', 'running')
+
+    def process_should_run(self, running):
+        start_time = self.current_conf.get('starttime', 0)
+        return start_time > 0 and self.process_is_running(self.current_status['status']) and not running
+
+    def is_exit_code_known(self):
+        known_codes = self.current_conf.get('exitcodes', [])
+        return_code = self.current_status['process'].returncode
+        return return_code not in known_codes
+
+    def return_code_unexpected(self):
+        restart_when_unexpected = self.current_conf.get('autorestart', '') == 'unexpected'
+        return restart_when_unexpected and self.current_status['status'] == 'exited' and self.is_exit_code_known()
+
+    def process_should_never_stop_but_did(self):
+        autorestart = self.current_conf.get('autorestart', '')
+        return autorestart =='always' and self.current_status['status'] in ('exited')
+
+    def check_processes(self):
         processes_copy = {**self._processes}
         for proc_name, stat in processes_copy.items():
             for i, status in enumerate(stat):
-                conf = self._conf.get(proc_name, None)
-                if not conf:
-                    continue
-                running = status['process'].poll() is None
-                if (status['status'] == 'stopped' and running):
-                    if (now - status['stoptime'] > timedelta(0, conf.get('stoptime', 0))):
-                       status = self.kill(status, signal.SIGKILL)
+                self.current_status = status
+                self.current_conf = self._conf.get(proc_name, None)
 
-                if (conf.get('starttime', 0) > 0
-                     and status['status'] in ('started', 'running') and not running):
-                    if (now - status['start_date']) < timedelta(0, conf.get('starttime', 0)):
-                        status = self.check_start_retry(proc_name, status, conf)
-                        continue
+                if not self.current_conf:
+                    continue
+                conf = self.current_conf
+                running = status['process'].poll() is None
+
+                if self.process_should_not_run(running):
+                    status = self.kill(status, signal.SIGKILL)
+
+                if self.process_should_run(running) and self.is_start_time(status['start_date']):
+                    status = self.check_start_retry(proc_name, status, conf)
                 else:
                     if status['status'] not in ('exited', 'stopped'):
                         self.logger.info('%s exited !', proc_name)
                         status['status'] = 'exited'
-                    if (conf.get('autorestart', '') == 'unexpected'
-                        and status['status'] == 'exited'
-                        and status['process'].returncode not in conf.get('exitcodes', [])):
-                        status = self.check_start_retry(proc_name, status, conf)
-                    if (conf.get('autorestart', '') == 'always'
-                        and status['status'] in ('exited')):
+                    if self.return_code_unexpected() or self.process_should_never_stop_but_did():
                         status = self.check_start_retry(proc_name, status, conf)
 
                 self._processes[proc_name][i] = status
-
-    def has_conf_changed(self):
-        return self._conf.has_changed()
 
     def initchildproc(self, name):
         os.setpgrp()
@@ -182,20 +216,21 @@ class Taskmaster:
 
         with self._get_io("stdout", current_state) as stdout, self._get_io("stderr", current_state) as stderr:
             process = subprocess.Popen(
-                shlex.split(current_state['cmd']),
-                stdout=stdout,
-                stderr=stderr,
-                env=env,
-                preexec_fn=lambda: self.initchildproc(name)
-            )
+                    shlex.split(current_state['cmd']),
+                    stdout=stdout,
+                    stderr=stderr,
+                    env=env,
+                    preexec_fn=lambda: self.initchildproc(name)
+                    )
 
-        self.logger.info('%s started !', name)
-        return {
-            'retries': status.get('retries', 0),
-            'process': process,
-            'start_date': datetime.now(),
-            'status': 'started'
-        }
+            self.logger.info('%s started !', name)
+        new_process = {
+                'retries': status.get('retries', 0),
+                'process': process,
+                'start_date': datetime.now(),
+                'status': 'started'
+                }
+        return new_process
 
     def start(self, name):
         if self._handle_bad_name(name):
