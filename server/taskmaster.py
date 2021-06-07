@@ -141,9 +141,9 @@ class Taskmaster:
         conf_stop_time = self.current_conf.get('stoptime', 0)
         return (now - stoptime) > timedelta(0, conf_stop_time)
 
-    def is_start_time(self, start_date):
+    def start_date_is_done(self, start_date):
         now = datetime.now()
-        conf_start_time = self.current_conf.get('stoptime', 0)
+        conf_start_time = self.current_conf.get('starttime', 0)
         return (now - start_date) < timedelta(0, conf_start_time)
 
     def process_should_not_run(self, running):
@@ -161,6 +161,7 @@ class Taskmaster:
     def is_exit_code_known(self):
         known_codes = self.current_conf.get('exitcodes', [])
         return_code = self.current_status['process'].returncode
+        # print(return_code)
         return return_code not in known_codes
 
     def return_code_unexpected(self):
@@ -185,14 +186,20 @@ class Taskmaster:
 
                 if self.process_should_not_run(running):
                     status = self.kill(status, signal.SIGKILL)
+                    self.logger.info('%s was killed', proc_name)
 
-                if self.process_should_run(running) and self.is_start_time(status['start_date']):
-                    status = self.check_start_retry(proc_name, status, conf)
+                if running: continue
+
+                if self.process_should_run(running):
+                    if self.start_date_is_done(status['start_date']):
+                        status = self.check_start_retry(proc_name, status, conf)
                 else:
                     if status['status'] not in ('exited', 'stopped'):
                         self.logger.info('%s exited !', proc_name)
                         status['status'] = 'exited'
                     if self.return_code_unexpected() or self.process_should_never_stop_but_did():
+                        if (proc_name == 'ginx'):
+                            print(self.return_code_unexpected())
                         status = self.check_start_retry(proc_name, status, conf)
 
                 self._processes[proc_name][i] = status
@@ -223,7 +230,7 @@ class Taskmaster:
                     preexec_fn=lambda: self.initchildproc(name)
                     )
 
-            self.logger.info('%s started !', name)
+        self.logger.info('%s started !', name)
         new_process = {
                 'retries': status.get('retries', 0),
                 'process': process,
@@ -253,7 +260,7 @@ class Taskmaster:
         return ret + '%s successfully started' % name
 
     def kill(self, status, signal):
-        os.kill(status['process'].pid, signal)
+        status['process'].send_signal(signal)
         status['stoptime'] = datetime.now()
         status['status'] = 'stopped'
         return status
@@ -275,8 +282,8 @@ class Taskmaster:
                 self.logger.warning('Process %s already exited', name) # TODO: it crash for some obscur Reason
                 return ret + 'process %s already exited' % name
 
-        self.logger.info('%s stopped !', name)
-        return ret + '%s successfully stopped' % name
+        self.logger.info('%s was sent to %s ', sign, name)
+        return ret + '%s was sent to %s ' % (sign, name)
 
     def restart(self, name):
         self.stop(name)
@@ -288,6 +295,7 @@ class Taskmaster:
             out += '\n%s (%s):\n' % (proc_name, self._conf[proc_name]['cmd'])
             for proc in status:
                 out += '  status: %s' % proc['status']
+                out += '\n  running: %s' % ('Yes' if proc['process'].poll() is None else 'No')
                 if proc['status'] in ('started', 'running'):
                     out += '\n  started at: %s' % proc['start_date'].strftime('%d/%m/%Y, %H:%M:%S')
                 elif proc['process'].returncode:
