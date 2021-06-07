@@ -27,6 +27,7 @@ class Repl:
             'status' : (self._send, 'display status for each program'),
             'help' : (self._help, 'display help'),
             'exit' : (lambda i: [exit(0)], 'exit taskmaster'),
+            # 'exit' : (lambda i: [self._send('exit'), exit(0)], 'exit taskmaster'),
             # 'exit' : (lambda i: [self.socket.close(), os.kill(info.get_tm_pid(self.lock_file), signal.SIGKILL), exit(0)], 'exit taskmaster'),
         }
 

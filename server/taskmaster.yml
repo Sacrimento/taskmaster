@@ -1,8 +1,11 @@
 programs:
+    umask:
+        cmd: touch toto
+        umask: 222
+
     ginx:
         cmd: ./test/script/stoptime
         numprocs: 1
-        umask: 022
         autostart: true
         autorestart: unexpected
         exitcodes:
@@ -13,7 +16,6 @@ programs:
     starttime:
         cmd: python3 ./test/script/starttime.py
         numprocs: 1
-        umask: 022
         autostart: true
         autorestart: unexpected
         exitcodes:
@@ -26,7 +28,6 @@ programs:
     t t:
         cmd: echo coucou
         numprocs: 1
-        umask: 022
         autostart: true
         autorestart: unexpected
         exitcodes:

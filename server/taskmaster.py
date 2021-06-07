@@ -65,11 +65,11 @@ class Taskmaster:
             self.socket.close()
         if hasattr(self, 'conn') and self.conn:
             self.conn.close()
-        processes_copy = {**self._processes}
-        for proc_name, stat in processes_copy.items():
+        # processes_copy = {**self._processes}
+        for proc_name, stat in self._processes.items():
             for i, status in enumerate(stat):
                 try:
-                    os.kill(status['process'].pid, signal.SIGKILL)
+                    status['process'].kill()
                 except:
                     continue
         self.logger.info('taskmaster daemon stopped')
@@ -124,8 +124,6 @@ class Taskmaster:
             self.logger.warning('%s: unknown process name', name)
             return
 
-        for elem in self._processes[name]:
-            print(elem)
         exit(1)
         for i in range(len(self._processes[name])):
             if self._processes[name][i]['status'] in ('started', 'running'):
@@ -161,7 +159,6 @@ class Taskmaster:
     def is_exit_code_known(self):
         known_codes = self.current_conf.get('exitcodes', [])
         return_code = self.current_status['process'].returncode
-        # print(return_code)
         return return_code not in known_codes
 
     def return_code_unexpected(self):
@@ -198,18 +195,9 @@ class Taskmaster:
                         self.logger.info('%s exited !', proc_name)
                         status['status'] = 'exited'
                     if self.return_code_unexpected() or self.process_should_never_stop_but_did():
-                        if (proc_name == 'ginx'):
-                            print(self.return_code_unexpected())
                         status = self.check_start_retry(proc_name, status, conf)
 
                 self._processes[proc_name][i] = status
-
-    def initchildproc(self, name):
-        os.setpgrp()
-        umask = int(self._conf[name].get('umask', 777))
-
-        os.umask(umask)
-        os.chdir(self._conf[name].get('workingdir', os.getcwd()))
 
     def _get_io(self, io_name, current_state):
         selected_io = current_state.get(io_name, '/dev/' + io_name)
@@ -227,7 +215,8 @@ class Taskmaster:
                     stdout=stdout,
                     stderr=stderr,
                     env=env,
-                    preexec_fn=lambda: self.initchildproc(name)
+                    umask=self._conf[name].get('umask', 777),
+                    cwd=self._conf[name].get('workingdir', os.getcwd())
                     )
 
         self.logger.info('%s started !', name)
