@@ -1,6 +1,6 @@
 programs:
     umask:
-        cmd: touch toto
+        cmd: touch /tmp/toto
         umask: 222
 
     ginx:
