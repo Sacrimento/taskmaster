@@ -52,7 +52,7 @@ args	client/client.py	/^args = parser.parse_args()$/;"	v
 args	server/server.py	/^args = parser.parse_args()$/;"	v
 autorestart	unit_tester.py	/^def autorestart(content):$/;"	f
 catch_conf_except	server/conf.py	/^def catch_conf_except(func):$/;"	f
-check_negative_value	server/conf.py	/^    def check_negative_value(self, programs, errors):$/;"	m	class:Conf
+check_negative_value	server/conf.py	/^    def check_negative_value(self, program_name, programs, errors):$/;"	m	class:Conf
 check_processes	server/taskmaster.py	/^    def check_processes(self):$/;"	m	class:Taskmaster
 check_start_retry	server/taskmaster.py	/^    def check_start_retry(self, name, status, conf):$/;"	m	class:Taskmaster
 check_yml	server/server.py	/^def check_yml(param):$/;"	f
@@ -105,6 +105,8 @@ test	Makefile	/^test:$/;"	t
 test_all_yml	test/unit_tester.sh	/^function test_all_yml()$/;"	f
 test_autorestart	test/unit_tester.py	/^def test_autorestart(content):$/;"	f
 test_autostart	test/unit_tester.py	/^def test_autostart(content):$/;"	f
+test_dir	test/unit_tester.py	/^def test_dir(content):$/;"	f
+test_path	test/unit_tester.py	/^def test_path(program_log, server_log):$/;"	f
 test_print	test/unit_tester.sh	/^test_print()$/;"	f
 test_stderr_redirection	test/unit_tester.py	/^def test_stderr_redirection(program_log, server_log):$/;"	f
 test_stdout_redirection	test/unit_tester.py	/^def test_stdout_redirection(program_log, server_log):$/;"	f

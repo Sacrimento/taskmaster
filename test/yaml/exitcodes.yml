@@ -2,6 +2,7 @@ programs:
     invalid exitcode:
         cmd: ./test/script/exitcodes 1
         startretries: 2
+        autostart: true
         autorestart: unexpected
         exitcodes:
             - 0
@@ -10,6 +11,7 @@ programs:
     valid exitcode:
         cmd: ./test/script/exitcodes 2
         startretries: 2
+        autostart: true
         autorestart: unexpected
         exitcodes:
             - 0

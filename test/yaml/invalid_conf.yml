@@ -3,6 +3,7 @@ programs:
         cmd: echo coucou
         autostart: true
         autorestart: unexpected
+
     samename:
         cmd: echo coucou
         autostart: true

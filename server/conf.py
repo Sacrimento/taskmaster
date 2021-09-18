@@ -76,7 +76,8 @@ class Conf:
                         break
         return r
 
-    def check_negative_value(self, programs, errors):
+    def check_negative_value(self, program_name, programs, errors):
+        service_errors = []
         dic = ["starttime", "stoptime", "startretries"]
         autorestart = ['never', 'always', 'unexpected', None]
         autorestart_with_retry = ['always', 'unexpected']
@@ -85,25 +86,33 @@ class Conf:
         try:
             getattr(signal, 'SIG' + programs.get('stopsignal', 'TERM').upper())
         except AttributeError:
-            errors.append('Invalid value for: signal')
+            service_errors.append('Invalid value for: signal')
+
         if programs.get("autorestart", None) not in autorestart:
-            errors.append('autorestart must be: never, always or unexpected')
+            service_errors.append('autorestart must be: [%]' % autorestart.join(', '))
         if programs.get("startretries", 0) > 0 and programs.get("autorestart", None) not in autorestart_with_retry:
-           errors.append('autorestart needed when startretries is given')
+           service_errors.append('autorestart needed when startretries is given')
         if programs.get("numprocs", 1) <= 0:
-                errors.append('Invalid value for: numprocs')
-        if umask < 0 or umask > 777:
-                errors.append('Invalid value for: umask')
+                service_errors.append('numprocs must be > 0')
+        #TODO: CODER LE CODE
+        if umask < 0:
+                service_errors.append('umask must be > 0')
+        if umask > 777:
+                service_errors.append('umask must be < 777')
         for index in dic:
             if programs.get(index, 1) < 0:
-                errors.append('Negative value for: ' + index)
+                service_errors.append(index + ' must be positive')
+        if (service_errors):
+            errors.append('[%s] Invalid properties found:' % program_name)
+            errors += service_errors
+
 
     ## TODO check every *needed* option (such as 'cmd')
     def _check_data(self, new):
         errors = []
         if not 'programs' in new:
             errors.append('"programs" root key missing')
-        [self.check_negative_value(v, errors) for k, v in new['programs'].items()]
+        [self.check_negative_value(k, v, errors) for k, v in new['programs'].items()]
 
         if errors:
             raise MissingData('\n'.join(errors))
