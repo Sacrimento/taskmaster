@@ -210,22 +210,26 @@ class Taskmaster:
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in current_state.get('env', {}).items()}}
 
         with self._get_io("stdout", current_state) as stdout, self._get_io("stderr", current_state) as stderr:
-            process = subprocess.Popen(
-                    shlex.split(current_state['cmd']),
-                    stdout=stdout,
-                    stderr=stderr,
-                    env=env,
-                    umask=self._conf[name].get('umask', 777),
-                    cwd=self._conf[name].get('workingdir', os.getcwd())
-                    )
+            kwargs = {
+                'stdout': stdout,
+                'stderr': stderr,
+                'env': env,
+                'cwd': self._conf[name].get('workingdir', os.getcwd()),
+            }
+
+            if sys.version_info < (3, 8):
+                kwargs.update(preexec_fn=lambda: os.umask(self._conf[name].get('umask', 777)))
+            else:
+                kwargs.update(umask=self._conf[name].get('umask', 777))
+            process = subprocess.Popen(shlex.split(current_state['cmd']), **kwargs)
 
         self.logger.info('%s started !', name)
         new_process = {
-                'retries': status.get('retries', 0),
-                'process': process,
-                'start_date': datetime.now(),
-                'status': 'started'
-                }
+            'retries': status.get('retries', 0),
+            'process': process,
+            'start_date': datetime.now(),
+            'status': 'started'
+        }
         return new_process
 
     def start(self, name):
