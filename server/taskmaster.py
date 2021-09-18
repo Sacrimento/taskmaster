@@ -1,11 +1,12 @@
 import os
 import sys
+import smtplib
 import shlex
 import signal
 import socket
-import logging
 import inspect
 import subprocess
+from email.message import EmailMessage
 from datetime import datetime, timedelta
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -14,10 +15,12 @@ sys.path.insert(0, parent_dir)
 
 from tm_socket import send, recv, HOST
 
+from .logger import TaskmasterLogger
+
 class Taskmaster:
     _processes = {}
 
-    def __init__(self, conf, autoreload, outfile, lock_file, port):
+    def __init__(self, conf, outfile, lock_file, port, mail):
         self.lock_file = lock_file
         self.logger = logging.getLogger('[Taskmaster]')
 
@@ -31,14 +34,14 @@ class Taskmaster:
         self._conf = conf
         self.current_conf = {}
         self.current_status = {}
-        self.autoreload = autoreload
+        self.mail_addr = mail
 
-        logging.basicConfig(
-                filename=outfile,
-                format='%(name)s %(asctime)s - %(levelname)s: %(message)s',
-                datefmt='%d/%m/%Y %H:%M:%S',
-                level=logging.DEBUG,  # TODO change this to info
-                )
+        TaskmasterLogger(
+            filename=outfile,
+            format='%(name)s %(asctime)s - %(levelname)s: %(message)s',
+            datefmt='%d/%m/%Y %H:%M:%S',
+            level=logging.DEBUG,  # TODO change this to info
+        )
         self._conf.logger = self.logger
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -65,7 +68,6 @@ class Taskmaster:
             self.socket.close()
         if hasattr(self, 'conn') and self.conn:
             self.conn.close()
-        # processes_copy = {**self._processes}
         for proc_name, stat in self._processes.items():
             for i, status in enumerate(stat):
                 try:
@@ -81,13 +83,11 @@ class Taskmaster:
         s = data.split()
         self.logger.info('received %s command' % s)
         if len(s) == 0:
-            self.logger.info('invalid commmand received')
+            self.logger.info('invalid command received')
             exit(1)
-            return
 
         if len(s) > 0 and s[0] == 'exit':
             send(self.conn, 'exit done')
-            self.__del__()
             return
 
         ret = getattr(self, s[0])(' '.join(s[1:]) if len(s) > 1 else [None])
@@ -114,7 +114,7 @@ class Taskmaster:
     def check_start_retry(self, name, status, conf):
         if status['retries'] >= conf.get('startretries', 128):
             return status
-        if conf.get('autorestart', '') == 'never':
+        if conf.get('autorestart', 'never') == 'never':
             return status
         self.logger.info('Restarting %s (%s)', name, status['retries'])
         status['retries'] += 1
@@ -163,11 +163,11 @@ class Taskmaster:
         return return_code not in known_codes
 
     def return_code_unexpected(self):
-        restart_when_unexpected = self.current_conf.get('autorestart', '') == 'unexpected'
+        restart_when_unexpected = self.current_conf.get('autorestart', 'never') == 'unexpected'
         return restart_when_unexpected and self.current_status['status'] == 'exited' and self.is_exit_code_known()
 
     def process_should_never_stop_but_did(self):
-        autorestart = self.current_conf.get('autorestart', '')
+        autorestart = self.current_conf.get('autorestart', 'never')
         return autorestart =='always' and self.current_status['status'] in ('exited')
 
     def check_processes(self):
@@ -270,11 +270,12 @@ class Taskmaster:
         for i, proc in enumerate(self._processes[name]):
             if proc.get('status', '') in ('exited', 'stopped'):
                 ret += '%s numproc[%d]: process alreay stopped' % (name, i)
-            try:
-                self._processes[name][i] = self.kill(proc, sign)
-            except OSError:
-                self.logger.warning('Process %s already exited', name) # TODO: it crash for some obscur Reason
-                return ret + 'process %s already exited' % name
+            else:
+                try:
+                    self._processes[name][i] = self.kill(proc, sign)
+                except OSError:
+                    self.logger.warning('Process %s already exited', name)
+                    return ret + 'process %s already exited' % name
 
         self.logger.info('%s was sent to %s ', sign, name)
         return ret + '%s was sent to %s ' % (sign, name)
