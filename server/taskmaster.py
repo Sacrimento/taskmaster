@@ -214,13 +214,13 @@ class Taskmaster:
                 'stdout': stdout,
                 'stderr': stderr,
                 'env': env,
-                'cwd': self._conf[name].get('workingdir', os.getcwd()),
+                'cwd': current_state.get('workingdir', os.getcwd()),
             }
 
             if sys.version_info < (3, 8):
-                kwargs.update(preexec_fn=lambda: os.umask(self._conf[name].get('umask', 777)))
+                kwargs.update(preexec_fn=lambda: os.umask(current_state.get('umask', 777)))
             else:
-                kwargs.update(umask=self._conf[name].get('umask', 777))
+                kwargs.update(umask=current_state.get('umask', 777))
             process = subprocess.Popen(shlex.split(current_state['cmd']), **kwargs)
 
         self.logger.info('%s started !', name)
