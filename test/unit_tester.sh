@@ -30,7 +30,7 @@ test_yml()
 	echo "============================="
 	export DEFAULT_PORT=$((DEFAULT_PORT+1))
 	export cmd="make server PORT=$DEFAULT_PORT FILE=$file OUTPUT=${server_log}"
-	if [ -z "$VERBOSE" ]; then ($cmd > ${log});	else ($cmd); fi
+	if [ -z "$VERBOSE" ]; then ($cmd &> ${log});	else ($cmd); fi
 	# test_print $? ${BASENAME}
 	sleep 1
 	echo exit | ./client/client.py -p $DEFAULT_PORT >/dev/null

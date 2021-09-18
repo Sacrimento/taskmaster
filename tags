@@ -1,0 +1,115 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/ygarrot/git/taskmaster/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	/p5.9.20210110.0/
+Conf	server/conf.py	/^class Conf:$/;"	c
+DEFAULT_CONF_FILE	Makefile	/^DEFAULT_CONF_FILE=.\/server\/taskmaster.yml$/;"	m
+DEFAULT_LOCK_FILE	Makefile	/^DEFAULT_LOCK_FILE=\/tmp\/taskmaster.lock$/;"	m
+DEFAULT_LOCK_FILE	client/client.py	/^DEFAULT_LOCK_FILE='\/tmp\/taskmaster.lock'$/;"	v
+DEFAULT_LOCK_FILE	server/server.py	/^DEFAULT_LOCK_FILE='\/tmp\/taskmaster.lock'$/;"	v
+DEFAULT_OUTPUT_FILE	Makefile	/^DEFAULT_OUTPUT_FILE=\/tmp\/taskmaster.log$/;"	m
+DEFAULT_PORT	Makefile	/^DEFAULT_PORT=4242$/;"	m
+HOST	tm_socket.py	/^HOST = socket.gethostname()$/;"	v
+MissingData	server/conf.py	/^class MissingData(Exception):$/;"	c
+PORT	tm_socket.py	/^PORT = 4242$/;"	v
+Repl	client/repl.py	/^class Repl:$/;"	c
+Taskmaster	server/taskmaster.py	/^class Taskmaster:$/;"	c
+__del__	client/repl.py	/^    def __del__(self):$/;"	m	class:Repl
+__del__	server/taskmaster.py	/^    def __del__(self):$/;"	m	class:Taskmaster
+__delitem__	server/conf.py	/^    def __delitem__(self, item):$/;"	m	class:Conf
+__getitem__	server/conf.py	/^    def __getitem__(self, item):$/;"	m	class:Conf
+__init__	client/repl.py	/^    def __init__(self, lock_file, port, tm=None):$/;"	m	class:Repl
+__init__	server/conf.py	/^    def __init__(self, path):$/;"	m	class:Conf
+__init__	server/taskmaster.py	/^    def __init__(self, conf, autoreload, outfile, lock_file, port):$/;"	m	class:Taskmaster
+__iter__	server/conf.py	/^    def __iter__(self):$/;"	m	class:Conf
+__repr__	server/conf.py	/^    def __repr__(self):$/;"	m	class:Conf
+_check_data	server/conf.py	/^    def _check_data(self, new):$/;"	m	class:Conf
+_check_send	client/repl.py	/^    def _check_send(self, inp):$/;"	m	class:Repl
+_completer	client/repl.py	/^    def _completer(self, text, state):$/;"	m	class:Repl
+_conf_diff	server/conf.py	/^    def _conf_diff(self, new):$/;"	m	class:Conf
+_del	server/taskmaster.py	/^    def _del(self, name):$/;"	m	class:Taskmaster
+_dict	server/conf.py	/^    _dict = {}$/;"	v	class:Conf
+_file_hash	server/conf.py	/^    _file_hash = None$/;"	v	class:Conf
+_get_io	server/taskmaster.py	/^    def _get_io(self, io_name, current_state):$/;"	m	class:Taskmaster
+_handle_bad_name	server/taskmaster.py	/^    def _handle_bad_name(self, name):$/;"	m	class:Taskmaster
+_has_arg	client/repl.py	/^    def _has_arg(self, inp):$/;"	m	class:Repl
+_hash	server/conf.py	/^    def _hash(self):$/;"	m	class:Conf
+_help	client/repl.py	/^    def _help(self, inp):$/;"	m	class:Repl
+_processes	server/taskmaster.py	/^    _processes = {}$/;"	v	class:Taskmaster
+_send	client/repl.py	/^    def _send(self, payload):$/;"	m	class:Repl
+_sleep	Makefile	/^_sleep:$/;"	t
+_start	server/taskmaster.py	/^    def _start(self, name, status):$/;"	m	class:Taskmaster
+_unknown	client/repl.py	/^    def _unknown(self, inp):$/;"	m	class:Repl
+all	Makefile	/^all: server _sleep client$/;"	t
+args	client/client.py	/^args = parser.parse_args()$/;"	v
+args	server/server.py	/^args = parser.parse_args()$/;"	v
+autorestart	unit_tester.py	/^def autorestart(content):$/;"	f
+catch_conf_except	server/conf.py	/^def catch_conf_except(func):$/;"	f
+check_negative_value	server/conf.py	/^    def check_negative_value(self, programs, errors):$/;"	m	class:Conf
+check_processes	server/taskmaster.py	/^    def check_processes(self):$/;"	m	class:Taskmaster
+check_start_retry	server/taskmaster.py	/^    def check_start_retry(self, name, status, conf):$/;"	m	class:Taskmaster
+check_yml	server/server.py	/^def check_yml(param):$/;"	f
+client	Makefile	/^client:$/;"	t
+current_dir	client/repl.py	/^current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))$/;"	v
+current_dir	server/taskmaster.py	/^current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))$/;"	v
+exit_all_yml	test/unit_tester.sh	/^exit_all_yml()$/;"	f
+get	server/conf.py	/^    def get(self, item, default=None):$/;"	m	class:Conf
+get_tm_pid	client/get_tm_info.py	/^def get_tm_pid(lock_file):$/;"	f
+has_changed	server/conf.py	/^    def has_changed(self):$/;"	m	class:Conf
+info	client/repl.py	/^import get_tm_info as info$/;"	I	nameref:module:get_tm_info
+is_exit_code_known	server/taskmaster.py	/^    def is_exit_code_known(self):$/;"	m	class:Taskmaster
+is_process_allowed_to_run	server/taskmaster.py	/^    def is_process_allowed_to_run(self, current_status, running):$/;"	m	class:Taskmaster
+is_stop_time	server/taskmaster.py	/^    def is_stop_time(self, stoptime):$/;"	m	class:Taskmaster
+is_tm_running	client/get_tm_info.py	/^def is_tm_running(lock_file):$/;"	f
+kill	server/taskmaster.py	/^    def kill(self, status, signal):$/;"	m	class:Taskmaster
+listen	server/taskmaster.py	/^    def listen(self):$/;"	m	class:Taskmaster
+main	test/script/bad_stderr.c	/^int main() {$/;"	f	typeref:typename:int
+main	test/script/signal_program.c	/^int main(void)$/;"	f	typeref:typename:int
+main	test/script/starttime.c	/^int main(void)$/;"	f	typeref:typename:int
+main	test/script/stoptime.c	/^int main(void)$/;"	f	typeref:typename:int
+parent_dir	client/repl.py	/^parent_dir = os.path.dirname(current_dir)$/;"	v
+parent_dir	server/taskmaster.py	/^parent_dir = os.path.dirname(current_dir)$/;"	v
+parser	client/client.py	/^parser = argparse.ArgumentParser()$/;"	v
+parser	server/server.py	/^parser = argparse.ArgumentParser()$/;"	v
+populate	server/conf.py	/^    def populate(self):$/;"	m	class:Conf
+process_is_running	server/taskmaster.py	/^    def process_is_running(self, status):$/;"	m	class:Taskmaster
+process_should_never_stop_but_did	server/taskmaster.py	/^    def process_should_never_stop_but_did(self):$/;"	m	class:Taskmaster
+process_should_not_run	server/taskmaster.py	/^    def process_should_not_run(self, running):$/;"	m	class:Taskmaster
+process_should_run	server/taskmaster.py	/^    def process_should_run(self, running):$/;"	m	class:Taskmaster
+read	test/unit_tester.py	/^def read(filename):$/;"	f
+read	unit_tester.py	/^def read(filename):$/;"	f
+recv	tm_socket.py	/^def recv(sock):$/;"	f
+restart	server/taskmaster.py	/^    def restart(self, name):$/;"	m	class:Taskmaster
+return_code_unexpected	server/taskmaster.py	/^    def return_code_unexpected(self):$/;"	m	class:Taskmaster
+run	client/repl.py	/^    def run(self):$/;"	m	class:Repl
+run	server/taskmaster.py	/^    def run(self):$/;"	m	class:Taskmaster
+run_test	test/unit_tester.sh	/^run_test()$/;"	f
+run_test_2	test/unit_tester.sh	/^run_test_2()$/;"	f
+send	tm_socket.py	/^def send(sock, msg):$/;"	f
+server	Makefile	/^server:$/;"	t
+sig_handler	test/script/signal_program.c	/^void sig_handler(int sign)$/;"	f	typeref:typename:void
+sig_handler	test/script/starttime.c	/^void sig_handler(int sign)$/;"	f	typeref:typename:void
+sig_handler	test/script/stoptime.c	/^void sig_handler(int sign)$/;"	f	typeref:typename:void
+start	server/taskmaster.py	/^    def start(self, name):$/;"	m	class:Taskmaster
+start_date_is_done	server/taskmaster.py	/^    def start_date_is_done(self, start_date):$/;"	m	class:Taskmaster
+status	server/taskmaster.py	/^    def status(self, _):$/;"	m	class:Taskmaster
+stop	server/taskmaster.py	/^    def stop(self, name):$/;"	m	class:Taskmaster
+test	Makefile	/^test:$/;"	t
+test_all_yml	test/unit_tester.sh	/^function test_all_yml()$/;"	f
+test_autorestart	test/unit_tester.py	/^def test_autorestart(content):$/;"	f
+test_autostart	test/unit_tester.py	/^def test_autostart(content):$/;"	f
+test_print	test/unit_tester.sh	/^test_print()$/;"	f
+test_stderr_redirection	test/unit_tester.py	/^def test_stderr_redirection(program_log, server_log):$/;"	f
+test_stdout_redirection	test/unit_tester.py	/^def test_stdout_redirection(program_log, server_log):$/;"	f
+test_tcp	test/unit_tester.sh	/^test_tcp()$/;"	f
+test_yml	test/unit_tester.sh	/^test_yml()$/;"	f
+update_conf	server/taskmaster.py	/^    def update_conf(self, p=True, first=False):$/;"	m	class:Taskmaster
+update_tasks	server/taskmaster.py	/^    def update_tasks(self, changes, first=False):$/;"	m	class:Taskmaster
+wrapper	server/conf.py	/^    def wrapper(_self):$/;"	f	function:catch_conf_except	file:

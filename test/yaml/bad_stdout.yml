@@ -1,12 +1,12 @@
 programs:
-    stdout:
+    invalid_stdout:
         cmd: echo bad stdout
         stdout: /
 
-    stdout:
-        cmd: echo Must not be print since its echo
+    echo_in_closed_stdout:
+        cmd: echo "Must not be print since its echo"
         stdout: "-"
 
-    stdout:
+    stderr_with_closed_stdout:
         cmd: mkdir / # must be print since its stderr
         stdout: "-"
