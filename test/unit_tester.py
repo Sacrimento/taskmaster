@@ -63,18 +63,42 @@ def test_exitcode(program_log, server_log):
     assert "Restarting invalid exitcode (1)" in server_log
 
 @pytest.mark.parametrize(
-    "program_log",
-    [(read("./log/multiple_proc.log"))],
+    "program_log, server_log",
+    [(read("./log/exitcodes.log"), read("./output/exitcodes.log"))],
 )
-def test_multiproc(program_log):
-    assert program_log.count('MULTIPROC') == 4
+def test_multiproc(program_log, server_log):
+    assert server_log.count('numprocs started !') == 4
 
 @pytest.mark.parametrize(
     "program_log",
-    [(read("./log/multiple_proc.log"))],
+    [(read("./log/signal.log"))],
 )
-def test_multiproc(program_log, server_log):
+def test_signal(program_log, server_log):
     assert 'received SIGINT' in program_log
-    assert 'program stopped' in program_log
 
 
+@pytest.mark.parametrize(
+    "program_log, server_log",
+    [(read("./log/manual_test_start_stop_restart.log"), read("./output/manual_test_start_stop_restart.log"))],
+)
+def test_start_stop_restart(program_log, server_log):
+    assert 'stop started' in server_log
+    assert 'start started' in server_log
+    assert 'stop exited' in server_log
+
+   @pytest.mark.parametrize(
+    "program_log, server_log",
+    [(read("./log/start_retries.log"), read("./output/start_retries.log"))],
+)
+def test_start_retries(program_log, server_log):
+    assert program_log.count('Restarting startretries') == 4
+
+
+@pytest.mark.parametrize(
+    "program_log, server_log",
+    [(read("./log/starttime.log"), read("./output/starttime.log"))],
+)
+def test_start_time(program_log, server_log):
+    assert program_log.count('Restarting starttime') == 2
+
+   

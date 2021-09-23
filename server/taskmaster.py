@@ -79,6 +79,7 @@ class Taskmaster:
             self.conn, _ = self.socket.accept()
         data = recv(self.conn)
         s = data.split()
+        self.logger.info('received %s command' % s)
         if len(s) == 0:
             self.logger.info('invalid commmand received')
             exit(1)

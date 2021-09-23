@@ -30,7 +30,7 @@ function test_yml()
 	echo "Testing [${BASENAME}] (${DEFAULT_PORT})"
 	echo "============================="
 	export cmd="make server PORT=$DEFAULT_PORT FILE=$file OUTPUT=${server_log}"
-	if [ -z "$VERBOSE" ]; then ($cmd &> ${log}); else ($cmd); fi
+	if [ -z "$VERBOSE" ]; then ($cmd &>${log}); else ($cmd); fi
 }
 
 function exit_all_yml()
@@ -64,18 +64,17 @@ function run_test()
 {
 	echo "Testing [${2}]"
 	echo "============================="
-	server_log=./test/output/manual_test_$2.log
-	log=./test/log/manual_test_$2.log
+	export server_log="./test/output/manual_test_$2.log"
+	export log="./test/log/manual_test_$2.log"
 	export DEFAULT_PORT=$((DEFAULT_PORT+1))
+	server_array+=($DEFAULT_PORT)
 
 	export cmd="make server PORT=$DEFAULT_PORT FILE=$3 OUTPUT=${server_log}"
-	if [ -z "$VERBOSE" ]; then ($cmd > ${log});	else ($cmd); fi
+	if [ -z "$VERBOSE" ]; then ($cmd &>> ${log});	else ($cmd); fi
 
-	sleep 1
 	printf "client\n" >> ${log}
 	printf "=============================\n" >> ${log}
-	($1) | ./client/client.py -p $DEFAULT_PORT >> ${log}
-	echo exit | ./client/client.py -p $DEFAULT_PORT >/dev/null
+	($1 | ./client/client.py -p $DEFAULT_PORT >> ${log})
 }
 
 
@@ -84,20 +83,19 @@ gcc ./test/script/stoptime.c -o ./test/script/stoptime
 # test_tcp
 
 test_all_yml
-#run_test "echo status" "status" ""
+# run_test "echo status" "status" ""
+# run_test "echo exit" "exit"
 
-#run_test "./test/script/start_stop_restart.sh" "start_stop_restart" "./test/yaml/start_stop_restart.yml"
+run_test "./test/script/start_stop_restart.sh" "start_stop_restart" "./test/yaml/start_stop_restart.yml"
 
-#run_test "echo exit" "exit"
-
-#run_test "echo stop signal" "signal" "./test/yaml/signal.yml"
+run_test "echo stop signal" "signal" "./test/yaml/signal.yml"
 #grep received "./test/log/manual_test_signal.log" >/dev/null
 #if [ $? -eq 0 ] ; then test_print 0  "signal" ; else test_print 1  "signal" ; fi
 
-##this file is also used in a script change it in both places
-#cp "./test/yaml/stoptime.yml" "/tmp/reload_conf.yml"
-#run_test  "./test/script/reload_conf.sh" "reload_conf" "/tmp/reload_conf.yml"
+#this file is also used in a script change it in both places
+cp "./test/yaml/stoptime.yml" "/tmp/reload_conf.yml"
+run_test  "./test/script/reload_conf.sh" "reload_conf" "/tmp/reload_conf.yml"
 
-#run_test  "./test/script/stoptime.sh" "stoptime" "./test/yaml/stoptime.yml" &
+run_test  "./test/script/stoptime.sh" "stoptime" "./test/yaml/stoptime.yml" &
 
 exit_all_yml

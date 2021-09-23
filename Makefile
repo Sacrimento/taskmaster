@@ -8,25 +8,23 @@ all: server _sleep client
 _sleep:
 	@sleep 1
 
+$(eval PORT?=$(DEFAULT_PORT))
 server:
 	@echo starting server...
-	# @killall -q python3 || true
-	@rm -f $(DEFAULT_LOCK_FILE)
-	PORT=$(if $(PORT),$(PORT),$(DEFAULT_PORT))
-	OUTPUT=$(if $(OUTPUT),$(OUTPUT),$(DEFAULT_OUTPUT_FILE))
-	FILE=$(if $(FILE),$(FILE),$(DEFAULT_CONF_FILE))
-	echo $(OUTPUT)
+	$(eval OUTPUT?=$(DEFAULT_OUTPUT_FILE))
+	$(eval FILE?=$(DEFAULT_CONF_FILE))
 	@./server/server.py -p $(PORT) -l /tmp/task_master_lock_$(PORT).lock -o $(OUTPUT) -f $(FILE) &
 
 client:
 	@echo starting client...
-	@./client/client.py || echo client has exited
+	@./client/client.py -p $(PORT) || echo client has exited
 	@echo exit | ./client/client.py
 
 test:
-	@./test/unit_tester.sh
-	@killall cat stoptime signal starttime 2>/dev/null || echo process killed
 	@rm -f /tmp/*.lock
+	@killall -q python3 || true
+	@./test/unit_tester.sh || echo test failed
+	@killall cat stoptime signal starttime 2>/dev/null || echo process killed
 
 
 .PHONY: server client test

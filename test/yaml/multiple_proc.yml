@@ -1,4 +1,4 @@
 programs:
     numprocs:
-        cmd: echo MULTIPROC
+        cmd: echo "MULTIPROC"
         numprocs: 4

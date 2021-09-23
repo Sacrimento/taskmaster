@@ -1,4 +1,6 @@
 #!/bin/bash
 
-text="start start\nstop stop\nrestart stop\nstop stop\n"
-printf "${text}"
+printf "start start\n"
+printf "stop stop\n"
+printf "restart stop\n"
+printf "stop stop\n"

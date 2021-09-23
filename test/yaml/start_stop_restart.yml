@@ -2,7 +2,9 @@ programs:
 
     start:
         cmd: echo "start"
+        autostart: true
 
     stop:
-        cmd: 1>&2 echo "stopped has been started" && cat "/dev/random" && 1>&2 echo "stopped has been stopped"
+        cmd: cat "/dev/random"
         stdout: /dev/null
+        autostart: true

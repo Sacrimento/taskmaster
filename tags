@@ -106,9 +106,12 @@ test_autostart	test/unit_tester.py	/^def test_autostart(content):$/;"	f
 test_dir	test/unit_tester.py	/^def test_dir(content):$/;"	f
 test_env	test/unit_tester.py	/^def test_env(program_log, server_log):$/;"	f
 test_exitcode	test/unit_tester.py	/^def test_exitcode(program_log, server_log):$/;"	f
-test_multiproc	test/unit_tester.py	/^def test_multiproc(program_log):$/;"	f
 test_multiproc	test/unit_tester.py	/^def test_multiproc(program_log, server_log):$/;"	f
 test_print	test/unit_tester.sh	/^function test_print()$/;"	f
+test_signal	test/unit_tester.py	/^def test_signal(program_log, server_log):$/;"	f
+test_start_retries	test/unit_tester.py	/^def test_start_retries(program_log, server_log):$/;"	f
+test_start_stop_restart	test/unit_tester.py	/^def test_start_stop_restart(program_log, server_log):$/;"	f
+test_start_time	test/unit_tester.py	/^def test_start_time(program_log, server_log):$/;"	f
 test_stderr_redirection	test/unit_tester.py	/^def test_stderr_redirection(program_log, server_log):$/;"	f
 test_stdout_redirection	test/unit_tester.py	/^def test_stdout_redirection(program_log, server_log):$/;"	f
 test_tcp	test/unit_tester.sh	/^function test_tcp()$/;"	f
