@@ -50,7 +50,6 @@ _unknown	client/repl.py	/^    def _unknown(self, inp):$/;"	m	class:Repl
 all	Makefile	/^all: server _sleep client$/;"	t
 args	client/client.py	/^args = parser.parse_args()$/;"	v
 args	server/server.py	/^args = parser.parse_args()$/;"	v
-autorestart	unit_tester.py	/^def autorestart(content):$/;"	f
 catch_conf_except	server/conf.py	/^def catch_conf_except(func):$/;"	f
 check_negative_value	server/conf.py	/^    def check_negative_value(self, program_name, programs, errors):$/;"	m	class:Conf
 check_processes	server/taskmaster.py	/^    def check_processes(self):$/;"	m	class:Taskmaster
@@ -59,7 +58,7 @@ check_yml	server/server.py	/^def check_yml(param):$/;"	f
 client	Makefile	/^client:$/;"	t
 current_dir	client/repl.py	/^current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))$/;"	v
 current_dir	server/taskmaster.py	/^current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))$/;"	v
-exit_all_yml	test/unit_tester.sh	/^exit_all_yml()$/;"	f
+exit_all_yml	test/unit_tester.sh	/^function exit_all_yml()$/;"	f
 get	server/conf.py	/^    def get(self, item, default=None):$/;"	m	class:Conf
 get_tm_pid	client/get_tm_info.py	/^def get_tm_pid(lock_file):$/;"	f
 has_changed	server/conf.py	/^    def has_changed(self):$/;"	m	class:Conf
@@ -84,16 +83,15 @@ process_should_never_stop_but_did	server/taskmaster.py	/^    def process_should_
 process_should_not_run	server/taskmaster.py	/^    def process_should_not_run(self, running):$/;"	m	class:Taskmaster
 process_should_run	server/taskmaster.py	/^    def process_should_run(self, running):$/;"	m	class:Taskmaster
 read	test/unit_tester.py	/^def read(filename):$/;"	f
-read	unit_tester.py	/^def read(filename):$/;"	f
 recv	tm_socket.py	/^def recv(sock):$/;"	f
 restart	server/taskmaster.py	/^    def restart(self, name):$/;"	m	class:Taskmaster
 return_code_unexpected	server/taskmaster.py	/^    def return_code_unexpected(self):$/;"	m	class:Taskmaster
 run	client/repl.py	/^    def run(self):$/;"	m	class:Repl
 run	server/taskmaster.py	/^    def run(self):$/;"	m	class:Taskmaster
-run_test	test/unit_tester.sh	/^run_test()$/;"	f
-run_test_2	test/unit_tester.sh	/^run_test_2()$/;"	f
+run_test	test/unit_tester.sh	/^function run_test()$/;"	f
 send	tm_socket.py	/^def send(sock, msg):$/;"	f
 server	Makefile	/^server:$/;"	t
+server_array=	test/unit_tester.sh	/^export server_array=()$/;"	f
 sig_handler	test/script/signal_program.c	/^void sig_handler(int sign)$/;"	f	typeref:typename:void
 sig_handler	test/script/starttime.c	/^void sig_handler(int sign)$/;"	f	typeref:typename:void
 sig_handler	test/script/stoptime.c	/^void sig_handler(int sign)$/;"	f	typeref:typename:void
@@ -106,12 +104,15 @@ test_all_yml	test/unit_tester.sh	/^function test_all_yml()$/;"	f
 test_autorestart	test/unit_tester.py	/^def test_autorestart(content):$/;"	f
 test_autostart	test/unit_tester.py	/^def test_autostart(content):$/;"	f
 test_dir	test/unit_tester.py	/^def test_dir(content):$/;"	f
-test_path	test/unit_tester.py	/^def test_path(program_log, server_log):$/;"	f
-test_print	test/unit_tester.sh	/^test_print()$/;"	f
+test_env	test/unit_tester.py	/^def test_env(program_log, server_log):$/;"	f
+test_exitcode	test/unit_tester.py	/^def test_exitcode(program_log, server_log):$/;"	f
+test_multiproc	test/unit_tester.py	/^def test_multiproc(program_log):$/;"	f
+test_multiproc	test/unit_tester.py	/^def test_multiproc(program_log, server_log):$/;"	f
+test_print	test/unit_tester.sh	/^function test_print()$/;"	f
 test_stderr_redirection	test/unit_tester.py	/^def test_stderr_redirection(program_log, server_log):$/;"	f
 test_stdout_redirection	test/unit_tester.py	/^def test_stdout_redirection(program_log, server_log):$/;"	f
-test_tcp	test/unit_tester.sh	/^test_tcp()$/;"	f
-test_yml	test/unit_tester.sh	/^test_yml()$/;"	f
+test_tcp	test/unit_tester.sh	/^function test_tcp()$/;"	f
+test_yml	test/unit_tester.sh	/^function test_yml()$/;"	f
 update_conf	server/taskmaster.py	/^    def update_conf(self, p=True, first=False):$/;"	m	class:Taskmaster
 update_tasks	server/taskmaster.py	/^    def update_tasks(self, changes, first=False):$/;"	m	class:Taskmaster
 wrapper	server/conf.py	/^    def wrapper(_self):$/;"	f	function:catch_conf_except	file:

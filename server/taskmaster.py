@@ -25,7 +25,7 @@ class Taskmaster:
             with open(lock_file, 'w+') as f:
                 f.write(str(os.getpid()))
         else:
-            print('Taskmaster daemon already running')
+            print('Taskmaster daemon already running (%s)' % lock_file)
             exit(1)
 
         self._conf = conf

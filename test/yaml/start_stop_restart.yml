@@ -1,9 +1,8 @@
 programs:
 
     start:
-        cmd: echo start
+        cmd: echo "start"
 
     stop:
-        cmd: cat /dev/random
-        stderr: /dev/null
+        cmd: 1>&2 echo "stopped has been started" && cat "/dev/random" && 1>&2 echo "stopped has been stopped"
         stdout: /dev/null
