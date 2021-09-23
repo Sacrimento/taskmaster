@@ -27,7 +27,7 @@ def test_autostart(content):
 )
 def test_stderr_redirection(program_log, server_log):
     assert "autostart does not works" not in program_log
-    assert "echo its not stderr, it will be printed" in program_log
+    assert "its not stderr, it will be printed" in program_log
     assert "[Errno 21] Is a directory: '/'" in server_log
 
 @pytest.mark.parametrize(
@@ -35,8 +35,7 @@ def test_stderr_redirection(program_log, server_log):
     [(read("./log/bad_stdout.log"), read("./output/bad_stdout.log"))],
 )
 def test_stdout_redirection(program_log, server_log):
-    assert "autostart does not works" not in program_log
-    assert "Must not be print since its echo" in program_log
+    assert "Must not be print since its echo" not in program_log
     assert "[Errno 21] Is a directory: '/'" in server_log
 
 @pytest.mark.parametrize(
@@ -59,12 +58,11 @@ def test_env(program_log, server_log):
     [(read("./log/exitcodes.log"), read("./output/exitcodes.log"))],
 )
 def test_exitcode(program_log, server_log):
-    assert "exitcode = 1" not in program_log
-    assert "Restarting invalid exitcode (1)" in server_log
+    assert server_log.count("Restarting invalid exitcode") == 2
 
 @pytest.mark.parametrize(
     "program_log, server_log",
-    [(read("./log/exitcodes.log"), read("./output/exitcodes.log"))],
+    [(read("./log/multiple_proc.log"), read("./output/multiple_proc.log"))],
 )
 def test_multiproc(program_log, server_log):
     assert server_log.count('numprocs started !') == 4
@@ -73,7 +71,7 @@ def test_multiproc(program_log, server_log):
     "program_log",
     [(read("./log/signal.log"))],
 )
-def test_signal(program_log, server_log):
+def test_signal(program_log):
     assert 'received SIGINT' in program_log
 
 
@@ -86,12 +84,12 @@ def test_start_stop_restart(program_log, server_log):
     assert 'start started' in server_log
     assert 'stop exited' in server_log
 
-   @pytest.mark.parametrize(
+@pytest.mark.parametrize(
     "program_log, server_log",
-    [(read("./log/start_retries.log"), read("./output/start_retries.log"))],
+    [(read("./log/startretries.log"), read("./output/startretries.log"))],
 )
 def test_start_retries(program_log, server_log):
-    assert program_log.count('Restarting startretries') == 4
+    assert server_log.count('Restarting startretries') == 4
 
 
 @pytest.mark.parametrize(
@@ -99,6 +97,6 @@ def test_start_retries(program_log, server_log):
     [(read("./log/starttime.log"), read("./output/starttime.log"))],
 )
 def test_start_time(program_log, server_log):
-    assert program_log.count('Restarting starttime') == 2
+    assert server_log.count('Restarting starttime') == 2
 
    

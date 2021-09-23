@@ -25,6 +25,7 @@ test:
 	@killall -q python3 || true
 	@./test/unit_tester.sh || echo test failed
 	@killall cat stoptime signal starttime 2>/dev/null || echo process killed
+	@cd test && pytest ./unit_tester.py
 
 
 .PHONY: server client test

@@ -5,8 +5,8 @@ mkdir -p ./test/output
 mkdir -p ./test/log
 rm -f ./test/output/*
 rm -f ./test/log/*
-export MAKEFLAGS="--no-print-directory -s"
 trap "exit 1" TERM
+export MAKEFLAGS="--no-print-directory -s"
 export TOP_PID=$$
 export DEFAULT_PORT=4242
 export server_array=()
