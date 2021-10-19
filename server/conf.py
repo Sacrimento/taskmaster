@@ -83,6 +83,8 @@ class Conf:
         autorestart_with_retry = ['always', 'unexpected']
         umask = programs.get("umask", 1)
 
+        if programs.get('cmd') is None:
+            errors.append('cmd key missing')
         try:
             getattr(signal, 'SIG' + programs.get('stopsignal', 'TERM').upper())
         except AttributeError:
@@ -107,7 +109,6 @@ class Conf:
             errors += service_errors
 
 
-    ## TODO check every *needed* option (such as 'cmd')
     def _check_data(self, new):
         errors = []
         if not 'programs' in new:

@@ -23,4 +23,4 @@ parser.add_argument('-m', '--mail', help='Mail address to send warnings')
 
 args = parser.parse_args()
 
-Taskmaster(Conf(args.file), args.auto_reload, args.outfile, args.lockfile, args.port, args.mail).run()
+Taskmaster(Conf(args.file), args.outfile, args.lockfile, args.port, args.mail).run()

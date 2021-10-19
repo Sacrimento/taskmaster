@@ -26,7 +26,7 @@ programs:
         stoptime: 10
 
     t t:
-        cmd: echo coucou
+        cmd: ssdsdsd
         numprocs: 1
         autostart: true
         autorestart: unexpected

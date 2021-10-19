@@ -6,7 +6,7 @@ import signal
 import socket
 import inspect
 import subprocess
-from email.message import EmailMessage
+import logging
 from datetime import datetime, timedelta
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -14,8 +14,6 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
 from tm_socket import send, recv, HOST
-
-from .logger import TaskmasterLogger
 
 class Taskmaster:
     _processes = {}
@@ -36,11 +34,11 @@ class Taskmaster:
         self.current_status = {}
         self.mail_addr = mail
 
-        TaskmasterLogger(
+        logging.basicConfig(
             filename=outfile,
             format='%(name)s %(asctime)s - %(levelname)s: %(message)s',
             datefmt='%d/%m/%Y %H:%M:%S',
-            level=logging.DEBUG,  # TODO change this to info
+            level=logging.DEBUG,
         )
         self._conf.logger = self.logger
 
@@ -57,8 +55,6 @@ class Taskmaster:
 
     def run(self):
         while True:
-            if self.autoreload and self._conf.has_changed():
-                self.update_conf()
             self.check_processes()
 
     def __del__(self):
@@ -125,9 +121,8 @@ class Taskmaster:
             self.logger.warning('%s: unknown process name', name)
             return
 
-        exit(1)
         for i in range(len(self._processes[name])):
-            if self._processes[name][i]['status'] in ('started', 'running'):
+            if self._processes[name][i]['status'] in ('starting', 'running'):
                 self.kill(self._processes[name][i], signal.SIGKILL)
 
         del self._processes[name]
@@ -140,18 +135,13 @@ class Taskmaster:
         conf_stop_time = self.current_conf.get('stoptime', 0)
         return (now - stoptime) > timedelta(0, conf_stop_time)
 
-    def start_date_is_done(self, start_date):
-        now = datetime.now()
-        conf_start_time = self.current_conf.get('starttime', 0)
-        return (now - start_date) < timedelta(0, conf_start_time)
-
     def process_should_not_run(self, running):
         current_status = self.current_status['status']
         stoptime = self.current_status.get('stoptime', 0)
         return self.is_process_allowed_to_run(current_status, running) and self.is_stop_time(stoptime)
 
     def process_is_running(self, status):
-        return status in ('started', 'running')
+        return status in ('starting', 'running')
 
     def process_should_run(self, running):
         start_time = self.current_conf.get('starttime', 0)
@@ -170,6 +160,10 @@ class Taskmaster:
         autorestart = self.current_conf.get('autorestart', 'never')
         return autorestart =='always' and self.current_status['status'] in ('exited')
 
+    def process_successfully_started(self, conf, startdate):
+        starttime = conf.get('starttime', 0)
+        return datetime.now() > (startdate + timedelta(0, starttime))
+
     def check_processes(self):
         processes_copy = {**self._processes}
         for proc_name, stat in processes_copy.items():
@@ -186,12 +180,10 @@ class Taskmaster:
                     status = self.kill(status, signal.SIGKILL)
                     self.logger.info('%s was killed', proc_name)
 
-                if running: continue
+                if self.process_successfully_started(conf, status['start_date']) and running:
+                    status['status'] = 'running'
 
-                if self.process_should_run(running):
-                    if self.start_date_is_done(status['start_date']):
-                        status = self.check_start_retry(proc_name, status, conf)
-                else:
+                if not running:
                     if status['status'] not in ('exited', 'stopped'):
                         self.logger.info('%s exited !', proc_name)
                         status['status'] = 'exited'
@@ -199,6 +191,7 @@ class Taskmaster:
                         status = self.check_start_retry(proc_name, status, conf)
 
                 self._processes[proc_name][i] = status
+
 
     def _get_io(self, io_name, current_state):
         selected_io = current_state.get(io_name, '/dev/' + io_name)
@@ -229,7 +222,7 @@ class Taskmaster:
             'retries': status.get('retries', 0),
             'process': process,
             'start_date': datetime.now(),
-            'status': 'started'
+            'status': 'starting'
         }
         return new_process
 
@@ -240,15 +233,14 @@ class Taskmaster:
         status = self._processes.get(name, [])
 
         for i in range(self._conf[name].get('numprocs', 1)):
-            if len(status) > i and status[i].get('status', '') in ('started', 'running'):
-                ret += '%s numproc[%d]: process alreay running' % (name, i)
+            if len(status) > i and status[i].get('status', '') in ('starting', 'running'):
+                ret += '%s numproc[%d]: process alreay running\n' % (name, i)
                 continue
             elem = status[i] if len(status) > i else {}
             try:
                 status.insert(i, self._start(name, elem))
             except (IOError, subprocess.SubprocessError) as e: # bad stderr stdout or umask
-                self.logger.info(e)
-                self.logger.info('Command was not executed by shell for: %s', name)
+                self.logger.exception('Command was not executed by shell for: %s', name)
 
         self._processes[name] = status
         return ret + '%s successfully started' % name
@@ -291,7 +283,7 @@ class Taskmaster:
             for proc in status:
                 out += '  status: %s' % proc['status']
                 out += '\n  running: %s' % ('Yes' if proc['process'].poll() is None else 'No')
-                if proc['status'] in ('started', 'running'):
+                if proc['status'] in ('starting', 'running'):
                     out += '\n  started at: %s' % proc['start_date'].strftime('%d/%m/%Y, %H:%M:%S')
                 elif proc['process'].returncode:
                     out += ' (%d)' % proc['process'].returncode
