@@ -1,4 +1,0 @@
-programs:
-    stoptime:
-        cmd: ./test/script/stoptime
-        stoptime: 10

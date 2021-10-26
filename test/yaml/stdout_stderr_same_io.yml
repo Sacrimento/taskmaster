@@ -1,5 +1,0 @@
-programs:
-    stdout_stderr_same_io:
-        cmd: echo bad stdout and stderr
-        stdout: /tmp/toto
-        stderr: /tmp/toto

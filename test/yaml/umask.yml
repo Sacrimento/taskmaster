@@ -1,4 +1,0 @@
-programs:
-    umask:
-        cmd: id
-        umask: 000

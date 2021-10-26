@@ -1,4 +1,0 @@
-programs:
-    dir:
-        cmd: pwd
-        workingdir: /tmp

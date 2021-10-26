@@ -1,7 +1,0 @@
-programs:
-    signal:
-        cmd: ./test/script/signal
-        stopsignal: INT
-        stdout: ./test/log/signal_2.log
-        stderr: ./test/log/signal_2.log
-        autostart: true
