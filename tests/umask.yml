@@ -1,0 +1,8 @@
+programs:
+  test644:
+    cmd: python -c "import os; print(oct(os.umask(0)))"
+    stdout: /tmp/umask644.stdout
+    umask: 644
+  test_default:
+    cmd: python -c "import os; print(oct(os.umask(0)))"
+    stdout: /tmp/umask_default.stdout

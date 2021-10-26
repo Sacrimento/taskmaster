@@ -1,0 +1,4 @@
+programs:
+  test:
+    cmd: touch workingdir
+    workingdir: /tmp

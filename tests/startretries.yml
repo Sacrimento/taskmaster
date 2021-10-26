@@ -1,0 +1,6 @@
+programs:
+  test:
+    cmd: echo coucou
+    autorestart: always
+    startretries: 4
+    stdout: /tmp/startretries.stdout

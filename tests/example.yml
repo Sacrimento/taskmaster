@@ -1,0 +1,19 @@
+programs:
+  infinite_proc:
+    cmd: sh -c 'while (true); do echo "I am an infite loop"; done;'
+    stdout: /tmp/example_infinite.stdout
+    numprocs: 5
+  web:
+    cmd: python -m http.server
+    stdout: /tmp/example_web.stdout
+    stoptime: 5
+    stopsignal: TERM
+  coucou:
+    cmd: echo coucou
+# 
+#
+#
+#
+#
+#
+#

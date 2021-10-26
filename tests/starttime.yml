@@ -1,0 +1,6 @@
+programs:
+  test:
+    cmd: sh -c 'while (true); do echo "I am an infite loop"; done;'
+    stdout: /tmp/starttime.stdout
+    starttime: 10
+    autostart: False

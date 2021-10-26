@@ -1,0 +1,6 @@
+programs:
+  test:
+    cmd: sh -c 'while (true); do echo "I am an infite loop"; done;'
+    stopsignal: CHLD
+    stdout: /tmp/stoptime.stdout
+    stoptime: 10

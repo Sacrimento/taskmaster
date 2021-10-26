@@ -6,6 +6,7 @@ PORT = 4242
 def send(sock, msg):
     try:
         sock.send(msg.encode('utf-8'))
+        return True
     except Exception as e:
         print('Could not send data : ', e)
 

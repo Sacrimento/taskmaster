@@ -1,0 +1,9 @@
+programs:
+  test_should_start:
+    cmd: echo "I started !"
+    stdout: /tmp/autostart.stdout
+    autostart: 1
+  test_should_not_start:
+    cmd: echo "I did not start !"
+    stdout: /tmp/autostart.stdout
+    autostart: false

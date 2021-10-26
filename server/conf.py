@@ -76,7 +76,17 @@ class Conf:
                         break
         return r
 
-    def check_negative_value(self, program_name, programs, errors):
+    def try_cast(self, cast, val, service_errors):
+        try:
+            cast(val)
+            return True
+        except Exception as e:
+            service_errors.append('Invalid value : value "%s" should be of type %s' % (val, cast.__name__))
+
+    def check_invalid_value(self, program_name, programs, errors):
+
+        if not isinstance(programs, dict):
+            return errors.append('%s is not a valid task' % programs)
         service_errors = []
         dic = ["starttime", "stoptime", "startretries"]
         autorestart = ['never', 'always', 'unexpected', None]
@@ -92,18 +102,31 @@ class Conf:
 
         if programs.get("autorestart", None) not in autorestart:
             service_errors.append('autorestart must be: [%]' % autorestart.join(', '))
+        self.try_cast(int, programs.get("startretries", 0), service_errors)
         if programs.get("startretries", 0) > 0 and programs.get("autorestart", None) not in autorestart_with_retry:
            service_errors.append('autorestart needed when startretries is given')
+        self.try_cast(int, programs.get("numprocs", 1), service_errors)
         if programs.get("numprocs", 1) <= 0:
                 service_errors.append('numprocs must be > 0')
-        #TODO: CODER LE CODE
-        if umask < 0:
-                service_errors.append('umask must be > 0')
-        if umask > 777:
-                service_errors.append('umask must be < 777')
+        if self.try_cast(int, programs.get("umask", 1), service_errors):
+            umask = int(umask)
+            if umask < 0:
+                    service_errors.append('umask must be > 0')
+            if umask > 777:
+                    service_errors.append('umask must be <= 777')
+        if self.try_cast(dict, programs.get('env', {}), service_errors):
+            for key, val in programs.get('env', {}):
+                self.try_cast(str, key, service_errors)
+                self.try_cast(str, val, service_errors)
+        if self.try_cast(list, programs.get('exitcodes', []), service_errors):
+            if isinstance(programs.get('exitcodes', []), list):
+                for i in programs.get('exitcodes', []):
+                    try_cast(int, i, service_errors)
         for index in dic:
-            if programs.get(index, 1) < 0:
-                service_errors.append(index + ' must be positive')
+            if self.try_cast(int, programs.get(index, 1), service_errors):
+                if programs.get(index, 1) < 0:
+                    service_errors.append(index + ' must be positive')
+        self.try_cast(bool, programs.get('autostart', True), service_errors)
         if (service_errors):
             errors.append('[%s] Invalid properties found:' % program_name)
             errors += service_errors
@@ -113,7 +136,7 @@ class Conf:
         errors = []
         if not 'programs' in new:
             errors.append('"programs" root key missing')
-        [self.check_negative_value(k, v, errors) for k, v in new['programs'].items()]
+        [self.check_invalid_value(k, v, errors) for k, v in new['programs'].items()]
 
         if errors:
             raise MissingData('\n'.join(errors))

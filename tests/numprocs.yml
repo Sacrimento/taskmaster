@@ -1,0 +1,5 @@
+programs:
+  test:
+    cmd: echo coucou
+    stdout: /tmp/numprocs.yml.stdout
+    numprocs: 5

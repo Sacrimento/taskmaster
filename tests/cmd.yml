@@ -1,0 +1,4 @@
+programs:
+  test:
+    cmd: echo coucou
+    stdout: /tmp/cmd.yml.stdout

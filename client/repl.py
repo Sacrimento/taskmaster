@@ -26,24 +26,29 @@ class Repl:
             'reread' : (lambda i: self._send('update_conf'), 'update configuration file'),
             'status' : (self._send, 'display status for each program'),
             'help' : (self._help, 'display help'),
-            # 'exit' : (lambda i: [exit(0)], 'exit taskmaster'),
-            # 'exit' : (lambda i: [self._send('exit'), exit(0)], 'exit taskmaster'),
-            'exit' : (lambda i: [self.socket.close(), os.kill(info.get_tm_pid(self.lock_file), signal.SIGINT), exit(0)], 'exit taskmaster'),
+            'exit' : (lambda i: [self.socket.close(), os.kill(info.get_tm_pid(self.lock_file), signal.SIGINT), exit(0)], 'exit taskmaster daemon'),
         }
 
         if not info.is_tm_running(self.lock_file):
             print('[Taskmaster] Fatal : taskmaster daemon not running')
             exit(1)
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((HOST, port))
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((HOST, port))
+        except Exception:
+            print('[Taskmaster] Fatal : could not connect to taskmaster daemon')
+            exit(1)
 
         readline.parse_and_bind('tab: complete')
         readline.set_completer(self._completer)
         signal.signal(signal.SIGHUP, lambda _, __: os.kill(info.get_tm_pid(self.lock_file), signal.SIGHUP))
-        signal.signal(signal.SIGINT, lambda _, __: (print(), exit(0))) # Maybe a bad idea
+        signal.signal(signal.SIGINT, lambda _, __: (print(), self.cleanup(), exit(0)))
 
     def __del__(self):
+        self.cleanup()
+
+    def cleanup(self):
         if hasattr(self, 'socket'):
             self.socket.close()
 
@@ -55,6 +60,7 @@ class Repl:
                 exit()
             if not info.is_tm_running(self.lock_file):
                 print('[Taskmaster] Fatal: Connection to taskmaster dameon lost')
+                self.cleanup()
                 exit(1)
             s = i.split()
             if s:
@@ -62,7 +68,10 @@ class Repl:
 
     def _send(self, payload):
         os.kill(info.get_tm_pid(self.lock_file), signal.SIGUSR1)
-        sent = send(self.socket, payload)
+        if not send(self.socket, payload):
+            print('[Taskmaster Fatal: Could not send to taskmaster daemon. Exiting...')
+            self.cleanup()
+            exit(1)
         data = recv(self.socket)
         print('[Taskmaster]: ' + data)
 

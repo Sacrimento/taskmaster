@@ -1,0 +1,13 @@
+programs:
+  test_redirect_stdout:
+    cmd: python -c "import sys; print('stdout', file=sys.stdout)"
+    stdout: /tmp/redirect.stdout
+  test_redirect_stderr:
+    cmd: python -c "import sys; print('stderr', file=sys.stderr)"
+    stderr: /tmp/redirect.stderr
+  test_null_stdout:
+    cmd: python -c "import sys; print('stdout', file=sys.stdout)"
+    stdout: '-'
+  test_null_stderr:
+    cmd: python -c "import sys; print('stderr', file=sys.stderr)"
+    stderr: '-'

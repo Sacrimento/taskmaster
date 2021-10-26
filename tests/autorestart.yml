@@ -1,0 +1,21 @@
+programs:
+  test_always:
+    cmd: echo "I am an infinite loop"
+    autorestart: always
+    stdout: /tmp/autorestart.always.stdout
+  test_unexpected_wont_restart:
+    cmd: echo "I restart if something went wrong (but I won't)"
+    autorestart: unexpected
+    stdout: /tmp/autorestart.unexpected_wont_restart.stdout
+    exitcodes:
+      - 0
+  test_unexpected_will_restart:
+    cmd: echo "I restart if something went wrong (and I will)"
+    autorestart: unexpected
+    stdout: /tmp/autorestart.unexpected_will_restart.stdout
+    exitcodes:
+      - 1
+  test_never:
+    cmd: echo "I will never restart whatever happens"
+    autorestart: never
+    stdout: /tmp/autorestart.never.stdout
