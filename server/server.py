@@ -2,6 +2,7 @@
 
 import os
 import argparse
+
 from conf import Conf
 from taskmaster import Taskmaster
 from tm_socket import PORT, HOST
@@ -16,10 +17,9 @@ def check_yml(param):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--port', help='port', default=PORT, type=int)
-parser.add_argument('-f', '--file', help='The configuration file to use (default is "taskmaster.yml")', default='taskmaster.yml', type=check_yml)
-parser.add_argument('-o', '--outfile', help='The log file to use', default='taskmaster.log')
-parser.add_argument('-l', '--lockfile', help='The lock file to use', default=DEFAULT_LOCK_FILE)
+parser.add_argument('-f', '--file', help='The configuration file to use', default='/tmp/taskmaster.yml', type=check_yml)
+parser.add_argument('-l', '--logfile', help='The log file to use', default='taskmaster.log')
 
 args = parser.parse_args()
 
-Taskmaster(Conf(args.file), args.outfile, args.lockfile, args.port).run()
+Taskmaster(Conf(args.file), args.logfile, DEFAULT_LOCK_FILE, args.port).run()

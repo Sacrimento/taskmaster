@@ -16,9 +16,8 @@ from tm_socket import send, recv, HOST
 
 class Repl:
 
-    def __init__(self, lock_file, port, tm=None):
-        self._tm = tm
-        self.lock_file=lock_file
+    def __init__(self, port):
+        self.lock_file='/tmp/taskmaster.lock'
         self._CMDS = {
             'start' : (self._check_send, 'start the PROGNAME program'),
             'stop' : (self._check_send, 'stop the PROGNAME program'),

@@ -2,7 +2,7 @@ programs:
   infinite_proc:
     cmd: sh -c 'while (true); do echo "I am an infite loop"; done;'
     stdout: /tmp/example_infinite.stdout
-    numprocs: 5
+    numprocs: 2
   web:
     cmd: python -m http.server
     stdout: /tmp/example_web.stdout
@@ -10,10 +10,12 @@ programs:
     stopsignal: TERM
   coucou:
     cmd: echo coucou
-# 
-#
-#
-#
-#
-#
-#
+  # infinite_proc: # will restart
+  #   cmd: sh -c 'while (true); do echo "I am an infite loop"; done;'
+  #   stdout: /tmp/example_infinite_another_stdout.stdout
+  #   numprocs: 1
+  # coucou: # won't change
+  #   cmd: echo coucou
+  # new_process:
+  #   cmd: echo "hello world"
+  #   stdout: /tmp/hello_world.stdout

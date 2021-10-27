@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import smtplib
 import shlex
 import signal
@@ -26,7 +27,7 @@ class Taskmaster:
             with open(lock_file, 'w+') as f:
                 f.write(str(os.getpid()))
         else:
-            print('Taskmaster daemon already running (%s)' % lock_file)
+            print('Taskmaster daemon already running (%s)' % lock_file, file=sys.stderr)
             exit(1)
 
         self._conf = conf
@@ -55,11 +56,12 @@ class Taskmaster:
         signal.signal(signal.SIGINT, lambda *_: exit(0))
         signal.signal(signal.SIGHUP, lambda *_: self.update_conf())
         self.logger.info('taskmaster daemon started')
-        self.update_conf(False, True)
+        self.update_conf(False)
 
     def run(self):
         while True:
             self.check_processes()
+            time.sleep(0.2)
 
     def cast(self, val, type, default):
         try:
@@ -106,22 +108,21 @@ class Taskmaster:
         ret = cmd(' '.join(s[1:]) if len(s) > 1 else [None])
         send(self.conn, ret)
 
-    def update_tasks(self, changes, first=False):
+    def update_tasks(self, changes):
         for todo in ('stop', '_del', 'start'):
             for task in changes[todo]:
-                if todo != 'start' or (first and self.cast(self._conf[task].get('autostart', True), bool, True)):
+                if todo != 'start' or self.cast(self._conf[task].get('autostart', True), bool, True):
                     getattr(self, todo)(task)
 
-    def update_conf(self, p=True, first=False):
+    def update_conf(self, p=True):
+        self.logger.info('Updating conf')
         conf_changes = self._conf.populate()
         if not conf_changes:
             return 'error occurred while updating the config file'
-        if not conf_changes['start'] and not conf_changes['stop']:
-            return 'config file updated'
         if p:
             self.logger.info('Config file updated !')
             self.logger.debug(self._conf)
-        self.update_tasks(conf_changes, first)
+        self.update_tasks(conf_changes)
         return 'config file updated'
 
     def check_start_retry(self, name, status, conf):
@@ -134,11 +135,7 @@ class Taskmaster:
         return self._start(name, status)
 
     def _del(self, name):
-        if not name or name not in self._processes:
-            self.logger.warning('%s: unknown process name', name)
-            return
-
-        for i in range(len(self._processes[name])):
+        for i in range(len(self._processes.get('name', []))):
             if self._processes[name][i]['status'] in ('starting', 'running'):
                 self.kill(self._processes[name][i], signal.SIGKILL)
 
@@ -226,7 +223,6 @@ class Taskmaster:
         env = {**os.environ.copy(), **{str(k): str(v) for k, v in self.cast(current_state.get('env', {}), dict, {}).items()}}
 
         with self._get_io("stdout", current_state) as stdout, self._get_io("stderr", current_state) as stderr:
-            print(stderr)
             kwargs = {
                 'stdout': stdout,
                 'stderr': stderr,
@@ -241,7 +237,6 @@ class Taskmaster:
                 kwargs.update(umask=umask)
             process = subprocess.Popen(shlex.split(current_state['cmd']), **kwargs)
 
-        self.logger.info('%s started !', name)
         new_process = {
             'retries': status.get('retries', 0),
             'process': process,
@@ -254,7 +249,7 @@ class Taskmaster:
         if self._handle_bad_name(name):
             return '%s: unknown process name' % name
         ret = ""
-        status = []
+        status = self._processes.get('name', [])
 
         for i in range(self.cast(self._conf[name].get('numprocs', 1), int, 1)):
             if len(status) > i and status[i].get('status', '') in ('starting', 'running'):
@@ -263,10 +258,11 @@ class Taskmaster:
             elem = status[i] if len(status) > i else {}
             try:
                 status.insert(i, self._start(name, elem))
+                self.logger.info('%s[%d] started !', name, i)
             except (IOError, subprocess.SubprocessError) as e: # bad stderr stdout or umask
                 self.logger.exception('Command was not executed by shell for: %s', name)
 
-        self._processes[name] = status
+        self._processes[name] = status[:]
         return ret + '%s successfully started' % name
 
     def kill(self, status, signal):
@@ -285,15 +281,15 @@ class Taskmaster:
         sign = getattr(signal, 'SIG' + self.cast(self._conf[name].get('stopsignal', 'TERM'), str, 'TERM').upper(), "SIGTERM")
         for i, proc in enumerate(self._processes[name]):
             if proc.get('status', '') in ('exited', 'stopped'):
-                ret += '%s numproc[%d]: process alreay stopped' % (name, i)
+                ret += '%s numproc[%d]: process alreay stopped\n' % (name, i)
             else:
                 try:
                     self._processes[name][i] = self.kill(proc, sign)
+                    self.logger.info('%s was sent to %s[%d]', sign, name, i)
                 except OSError:
                     self.logger.warning('Process %s already exited', name)
-                    return ret + 'process %s already exited' % name
+                    return ret + 'process %s already exited\n' % name
 
-        self.logger.info('%s was sent to %s ', sign, name)
         return ret + '%s was sent to %s ' % (sign, name)
 
     def restart(self, name):
@@ -306,11 +302,14 @@ class Taskmaster:
             out += '\n%s (%s):' % (proc_name, self._conf[proc_name]['cmd'])
             for i, proc in enumerate(status):
                 out += '\n  [%d] status: %s' % (i, proc['status'])
-                out += '\n  [%d] running: %s' % (i, ('Yes' if proc['process'].poll() is None else 'No'))
+                running = proc['process'].poll() is None
+                out += '\n  [%d] running: %s' % (i, ('Yes' if running else 'No'))
+                if running:
+                    out += ' (pid: %d)' % proc['process'].pid
                 if proc['status'] in ('starting', 'running'):
                     out += '\n  [%d] started at: %s' % (i, proc['start_date'].strftime('%d/%m/%Y, %H:%M:%S'))
                 elif proc['process'].returncode:
-                    out += ' (%d)' % proc['process'].returncode
+                    out += ' (returncode: %d)' % proc['process'].returncode
         if not out:
             out = 'no processes running'
         return out

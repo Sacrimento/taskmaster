@@ -78,8 +78,7 @@ class Conf:
 
     def try_cast(self, cast, val, service_errors):
         try:
-            cast(val)
-            return True
+            return cast(val)
         except Exception as e:
             service_errors.append('Invalid value : value "%s" should be of type %s' % (val, cast.__name__))
 
@@ -91,7 +90,6 @@ class Conf:
         dic = ["starttime", "stoptime", "startretries"]
         autorestart = ['never', 'always', 'unexpected', None]
         autorestart_with_retry = ['always', 'unexpected']
-        umask = programs.get("umask", 1)
 
         if programs.get('cmd') is None:
             errors.append('cmd key missing')
@@ -102,14 +100,16 @@ class Conf:
 
         if programs.get("autorestart", None) not in autorestart:
             service_errors.append('autorestart must be: [%]' % autorestart.join(', '))
-        self.try_cast(int, programs.get("startretries", 0), service_errors)
-        if programs.get("startretries", 0) > 0 and programs.get("autorestart", None) not in autorestart_with_retry:
-           service_errors.append('autorestart needed when startretries is given')
-        self.try_cast(int, programs.get("numprocs", 1), service_errors)
-        if programs.get("numprocs", 1) <= 0:
+        startretries = self.try_cast(int, programs.get("startretries", 0), service_errors)
+        if startretries is not None:
+            if programs.get("startretries", 0) > 0 and programs.get("autorestart", None) not in autorestart_with_retry:
+                service_errors.append('autorestart needed when startretries is given')
+        numprocs = self.try_cast(int, programs.get("numprocs", 1), service_errors)
+        if (numprocs is not None):
+            if numprocs <= 0:
                 service_errors.append('numprocs must be > 0')
-        if self.try_cast(int, programs.get("umask", 1), service_errors):
-            umask = int(umask)
+        umask = self.try_cast(int, programs.get("umask", 1), service_errors)
+        if (umask is not None):
             if umask < 0:
                     service_errors.append('umask must be > 0')
             if umask > 777:
@@ -125,7 +125,7 @@ class Conf:
         for index in dic:
             if self.try_cast(int, programs.get(index, 1), service_errors):
                 if programs.get(index, 1) < 0:
-                    service_errors.append(index + ' must be positive')
+                    service_errors.append(programs.get(index) + ' must be positive')
         self.try_cast(bool, programs.get('autostart', True), service_errors)
         if (service_errors):
             errors.append('[%s] Invalid properties found:' % program_name)
