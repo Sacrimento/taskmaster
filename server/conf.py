@@ -66,6 +66,7 @@ class Conf:
             r['start' if key in new else 'stop'].append(key)
             if key not in new:
                 r['_del'].append(key)
+                r['stop'].remove(key)
 
         for prog, prog_attr in new.items():
             if prog not in key_changes:
@@ -88,21 +89,27 @@ class Conf:
             return errors.append('%s is not a valid task' % programs)
         service_errors = []
         dic = ["starttime", "stoptime", "startretries"]
-        autorestart = ['never', 'always', 'unexpected', None]
+        autorestart = ['never', 'always', 'unexpected', '']
         autorestart_with_retry = ['always', 'unexpected']
 
         if programs.get('cmd') is None:
-            errors.append('cmd key missing')
+            service_errors.append('cmd key missing')
+        else:
+            self.try_cast(str, programs.get('cmd'), service_errors)
         try:
-            getattr(signal, 'SIG' + programs.get('stopsignal', 'TERM').upper())
+            sig = self.try_cast(str, programs.get('stopsignal', 'TERM'), service_errors)
+            if sig:
+                getattr(signal, 'SIG' + programs.get('stopsignal', 'TERM').upper())
         except AttributeError:
             service_errors.append('Invalid value for: signal')
 
-        if programs.get("autorestart", None) not in autorestart:
-            service_errors.append('autorestart must be: [%]' % autorestart.join(', '))
+        ar = self.try_cast(str, programs.get("autorestart", ''), service_errors)
+        if ar is not None:
+            if ar not in autorestart:
+                service_errors.append('autorestart must be: [always | unexpected | never]')
         startretries = self.try_cast(int, programs.get("startretries", 0), service_errors)
         if startretries is not None:
-            if programs.get("startretries", 0) > 0 and programs.get("autorestart", None) not in autorestart_with_retry:
+            if startretries > 0 and programs.get("autorestart", None) not in autorestart_with_retry:
                 service_errors.append('autorestart needed when startretries is given')
         numprocs = self.try_cast(int, programs.get("numprocs", 1), service_errors)
         if (numprocs is not None):
@@ -114,18 +121,19 @@ class Conf:
                     service_errors.append('umask must be > 0')
             if umask > 777:
                     service_errors.append('umask must be <= 777')
-        if self.try_cast(dict, programs.get('env', {}), service_errors):
-            for key, val in programs.get('env', {}):
+        env = self.try_cast(dict, programs.get('env', {}), service_errors)
+        if env is not None:
+            for key, val in programs.get('env', {}).items():
                 self.try_cast(str, key, service_errors)
                 self.try_cast(str, val, service_errors)
         if self.try_cast(list, programs.get('exitcodes', []), service_errors):
             if isinstance(programs.get('exitcodes', []), list):
                 for i in programs.get('exitcodes', []):
-                    try_cast(int, i, service_errors)
+                    self.try_cast(int, i, service_errors)
         for index in dic:
             if self.try_cast(int, programs.get(index, 1), service_errors):
                 if programs.get(index, 1) < 0:
-                    service_errors.append(programs.get(index) + ' must be positive')
+                    service_errors.append(str(programs.get(index)) + ' must be positive')
         self.try_cast(bool, programs.get('autostart', True), service_errors)
         if (service_errors):
             errors.append('[%s] Invalid properties found:' % program_name)

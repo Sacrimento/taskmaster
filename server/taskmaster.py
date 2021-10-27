@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import smtplib
 import shlex
 import signal
 import socket
@@ -34,12 +33,17 @@ class Taskmaster:
         self.current_conf = {}
         self.current_status = {}
 
-        logging.basicConfig(
-            filename=outfile,
-            format='%(name)s %(asctime)s - %(levelname)s: %(message)s',
-            datefmt='%d/%m/%Y %H:%M:%S',
-            level=logging.DEBUG,
-        )
+        try:
+            logging.basicConfig(
+                filename=outfile,
+                format='%(name)s %(asctime)s - %(levelname)s: %(message)s',
+                datefmt='%d/%m/%Y %H:%M:%S',
+                level=logging.DEBUG,
+            )
+        except Exception:
+            print('Could not initialize logging, exiting...')
+            exit(1)
+
         self._conf.logger = self.logger
 
         try:
@@ -135,7 +139,7 @@ class Taskmaster:
         return self._start(name, status)
 
     def _del(self, name):
-        for i in range(len(self._processes.get('name', []))):
+        for i in range(len(self._processes.get(name, []))):
             if self._processes[name][i]['status'] in ('starting', 'running'):
                 self.kill(self._processes[name][i], signal.SIGKILL)
 

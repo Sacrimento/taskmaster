@@ -6,6 +6,8 @@ programs:
   web:
     cmd: python -m http.server
     stdout: /tmp/example_web.stdout
+    autorestart: always
+    startretries: 1
     stoptime: 5
     stopsignal: TERM
   coucou:

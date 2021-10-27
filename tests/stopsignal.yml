@@ -3,3 +3,7 @@ programs:
     cmd: sh -c 'while (true); do echo "I am an infite loop"; done;'
     stopsignal: CHLD
     stdout: /tmp/stopsignal.stdout
+  test1:
+    cmd: sh -c 'while (true); do echo "I am an infite loop"; done;'
+    stopsignal: TERM
+    stdout: /tmp/stopsignal.stdout
